@@ -34,5 +34,14 @@ export const projectsData = {
     category: "hardware / fabrication",
     stack: "neon sign transformer, capacitors, 3D printing",
     status: "in progress"
+  },
+  "project-template": {
+    title: "Project Template",
+    tag: "tag / tag",
+    desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    date: "2026",
+    category: "category",
+    stack: "stack / stack",
+    status: "status"
   }
 };
