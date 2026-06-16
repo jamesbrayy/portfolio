@@ -2,8 +2,7 @@
 interface Props {
   title: string;
 }
-
-const { title } = Astro.props;
+const {title} = Astro.props;
 ---
 
 <!DOCTYPE html>
@@ -76,17 +75,17 @@ const { title } = Astro.props;
 
   if (logoLink) {
     logoLink.addEventListener('click', (e) => {
-      // Check if the current browser path is exactly the homepage root
-      // (Handling both with or without the trailing slash)
       if (window.location.pathname === '/portfolio/' || window.location.pathname === '/portfolio') {
-        // Stop the browser from doing a hard reload
         e.preventDefault();
         
-        // Smoothly scroll the window right back to the top coordinates
+        // 1. Smoothly scroll to the top
         window.scrollTo({
           top: 0,
           behavior: 'smooth'
         });
+
+        // 2. Reset the URL path without page refresh or leaving trailing symbols (#)
+        history.pushState(null, '', window.location.pathname);
       }
     });
   }
