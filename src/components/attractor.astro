@@ -1,65 +1,48 @@
 <canvas id="attractor-canvas"></canvas>
-
 <script>
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas = document.getElementById('attractor-canvas') as HTMLCanvasElement | null;
-
   if (canvas && !prefersReducedMotion) {
     const ctx = canvas.getContext('2d');
     const landingSection = document.querySelector('.landing') as HTMLElement;
     const titleEl = document.getElementById('landing-name');
-
     if (ctx && landingSection) {
       let isVisible = true;
       let animationFrameId: number;
       let lastTime = performance.now();
       let accumulator = 0;
-
       canvas.style.opacity = '0';
-
       const sigma = 10.0;
       const rho   = 28.0;
       const beta  = 8.0 / 3.0;
       const dt    = 0.0012;
-
-      // Reduced counts — visually indistinguishable at these values
       const MAX_PARTICLES = 300;
       const TRAIL_LENGTH  = 60;
-
-      // Flat Float32Arrays instead of arrays of objects — far less GC pressure
       const px  = new Float32Array(MAX_PARTICLES);
       const py  = new Float32Array(MAX_PARTICLES);
       const pz  = new Float32Array(MAX_PARTICLES);
-
-      // Ring buffer for history: each particle gets TRAIL_LENGTH slots
       const hx     = new Float32Array(MAX_PARTICLES * TRAIL_LENGTH);
       const hy     = new Float32Array(MAX_PARTICLES * TRAIL_LENGTH);
-      const heads  = new Int32Array(MAX_PARTICLES);   // current write index
-      const counts = new Int32Array(MAX_PARTICLES);   // how many points filled
-
+      const heads  = new Int32Array(MAX_PARTICLES);
+      const counts = new Int32Array(MAX_PARTICLES);
       for (let i = 0; i < MAX_PARTICLES; i++) {
         let rx = Math.random() * 30 - 15;
         let ry = Math.random() * 30 - 15;
         let rz = Math.random() * 30 + 10;
-
-        // Warm up onto the attractor
-        for (let j = 0; j < 2500; j++) {
+        // Reduced warmup: 800 steps is enough to land on the attractor
+        for (let j = 0; j < 800; j++) {
           const dx = sigma * (ry - rx) * dt;
           const dy = (rx * (rho - rz) - ry) * dt;
           const dz = (rx * ry - beta * rz) * dt;
           rx += dx; ry += dy; rz += dz;
         }
-
         px[i] = rx; py[i] = ry; pz[i] = rz;
         heads[i] = 0; counts[i] = 0;
       }
-
-      // Cached gradient — only rebuilt on resize
       let gradient: CanvasGradient | null = null;
       let cachedCenterX = -1;
       let cachedCenterY = -1;
       let cachedW = -1;
-
       function buildGradient(centerX: number, centerY: number, w: number, isMobile: boolean) {
         if (isMobile) {
           const g = ctx!.createLinearGradient(0, 0, w, 0);
@@ -69,83 +52,65 @@
           return g;
         } else {
           const g = ctx!.createLinearGradient(centerX - 250, 0, centerX + 350, 0);
-          g.addColorStop(0,   'rgba(0,255,157,1)');
-          g.addColorStop(0.4, 'rgba(0,255,157,0.45)');
-          g.addColorStop(1,   'rgba(0,255,157,0.01)');
+          // Slightly boosted opacity to compensate for removed mix-blend-mode
+          g.addColorStop(0,   'rgba(0,255,157,0.9)');
+          g.addColorStop(0.4, 'rgba(0,255,157,0.35)');
+          g.addColorStop(1,   'rgba(0,255,157,0.0)');
           return g;
         }
       }
-
       let canvasW = 0, canvasH = 0;
-
       function resizeCanvas() {
         if (!canvas || !landingSection) return;
         const rect = landingSection.getBoundingClientRect();
-        const dpr  = window.devicePixelRatio || 1;
-
+        // Cap DPR at 1 — retina quality is wasted on a background animation
+        const dpr  = Math.min(window.devicePixelRatio || 1, 1);
         canvas.width  = rect.width  * dpr;
         canvas.height = rect.height * dpr;
         canvas.style.width  = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
         ctx!.scale(dpr, dpr);
-
         canvasW = rect.width;
         canvasH = rect.height;
-
-        // Invalidate gradient and history
         gradient = null;
         heads.fill(0);
         counts.fill(0);
       }
-
-      // Debounce resize so it doesn't thrash on every pixel
       let resizeTimer: ReturnType<typeof setTimeout>;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(resizeCanvas, 150);
       });
       resizeCanvas();
-
       const simSpeedTarget = 32;
-
       function draw(currentTime = performance.now()) {
         if (!ctx || !canvas || !isVisible) return;
-
         let deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         if (deltaTime > 100) deltaTime = 100;
-
         ctx.clearRect(0, 0, canvasW, canvasH);
-
         const isMobile = canvasW < 768;
         let centerX = canvasW * 0.5;
         let centerY = canvasH * 0.5;
-
         if (titleEl && !isMobile) {
           const titleRect   = titleEl.getBoundingClientRect();
           const landingRect = landingSection.getBoundingClientRect();
           centerX = (titleRect.right  - landingRect.left) - 20;
           centerY = (titleRect.top    - landingRect.top)  + titleRect.height / 2 + 20;
         }
-
-        // Only rebuild gradient when layout changes
         if (!gradient || centerX !== cachedCenterX || centerY !== cachedCenterY || canvasW !== cachedW) {
           gradient      = buildGradient(centerX, centerY, canvasW, isMobile);
           cachedCenterX = centerX;
           cachedCenterY = centerY;
           cachedW       = canvasW;
         }
-
         accumulator += deltaTime;
-
         if (accumulator >= simSpeedTarget) {
           for (let i = 0; i < MAX_PARTICLES; i++) {
             const dx = sigma * (py[i] - px[i]) * dt;
             const dy = (px[i] * (rho - pz[i]) - py[i]) * dt;
             const dz = (px[i] * py[i] - beta * pz[i]) * dt;
             px[i] += dx; py[i] += dy; pz[i] += dz;
-
-            // Write into ring buffer
             const head = heads[i];
             hx[i * TRAIL_LENGTH + head] = px[i];
             hy[i * TRAIL_LENGTH + head] = py[i];
@@ -154,33 +119,24 @@
           }
           accumulator -= simSpeedTarget;
         }
-
         const zoomScale  = 11.5;
         const jumpThresh = canvasW / 4;
-
         ctx.lineWidth   = 0.85;
         ctx.strokeStyle = gradient;
         ctx.beginPath();
-
         for (let i = 0; i < MAX_PARTICLES; i++) {
           const count = counts[i];
           if (count < 2) continue;
-
           const base = i * TRAIL_LENGTH;
           const head = heads[i];
-
-          // Oldest point is at (head) when buffer is full, or 0 when not
           const start = count < TRAIL_LENGTH ? 0 : head;
-
           let prevX = centerX + hx[base + start] * zoomScale;
           let prevY = canvasH * 0.5 + hy[base + start] * zoomScale;
           ctx.moveTo(prevX, prevY);
-
           for (let j = 1; j < count; j++) {
-            const idx    = (start + j) % TRAIL_LENGTH;
+            const idx     = (start + j) % TRAIL_LENGTH;
             const screenX = centerX + hx[base + idx] * zoomScale;
             const screenY = canvasH * 0.5 + hy[base + idx] * zoomScale;
-
             if (Math.abs(prevX - screenX) < jumpThresh) {
               ctx.lineTo(screenX, screenY);
             } else {
@@ -190,11 +146,9 @@
             prevY = screenY;
           }
         }
-
         ctx.stroke();
         animationFrameId = requestAnimationFrame(draw);
       }
-
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           isVisible = entry.isIntersecting;
@@ -202,12 +156,10 @@
           else cancelAnimationFrame(animationFrameId);
         });
       }, { threshold: 0 });
-
       observer.observe(landingSection);
     }
   }
 </script>
-
 <style>
   #attractor-canvas {
     position: absolute;
@@ -215,7 +167,7 @@
     width: 100%; height: 100%;
     z-index: 1;
     pointer-events: none;
-    mix-blend-mode: screen;
+    /* mix-blend-mode removed — forces an extra compositing layer (~18MB on retina) */
     opacity: 1;
   }
 </style>
