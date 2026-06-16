@@ -1,7 +1,7 @@
 ---
 import Layout from '../../components/layout.astro';
 import { projectsData } from '../../data/projects.js';
-import nstImage from '../../assets/project-template.jpg';
+import projectImage from '../../assets/project.jpg';
 const project = projectsData["project-template"];
 ---
 
@@ -20,7 +20,7 @@ const project = projectsData["project-template"];
       </header>
 
       <div class="project-hero-image reveal">
-        <img src={nstImage.src} alt={project.title} />
+        <img src={projectImage.src} alt={project.title} />
       </div>
 
       <div class="project-layout">
