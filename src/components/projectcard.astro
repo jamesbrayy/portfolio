@@ -9,7 +9,7 @@ interface Props {
 const { tag, title, desc, href } = Astro.props;
 ---
 
-<a href={href} class="project-card">
+<a href={href} class="project-card" transition:animate="slide">
   <p class="project-tag">{tag}</p>
   <h2 class="project-title">{title}</h2>
   <p class="project-desc">{desc}</p>
