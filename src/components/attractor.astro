@@ -1,0 +1,199 @@
+<canvas id="attractor-canvas"></canvas>
+
+<script>
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.getElementById('attractor-canvas') as HTMLCanvasElement | null;
+
+  if (canvas && !prefersReducedMotion) {
+    const ctx = canvas.getContext('2d');
+    const landingSection = document.querySelector('.landing') as HTMLElement;
+    const titleEl = document.getElementById('landing-name');
+
+    if (ctx && landingSection) {
+      let isVisible = true;
+      let animationFrameId: number;
+      let lastTime = performance.now();
+      let accumulator = 0;
+
+      canvas.style.opacity = '0';
+
+      const sigma = 10.0;
+      const rho = 28.0;
+      const beta = 8.0 / 3.0;
+      const dt = 0.0012; 
+
+      const MAX_PARTICLES = 600; 
+      const TRAIL_LENGTH = 100; 
+      
+      const particles: Array<{
+        x: number, 
+        y: number, 
+        z: number, 
+        history: Array<{x: number, y: number}>
+      }> = [];
+
+      for (let i = 0; i < MAX_PARTICLES; i++) {
+        let rx = (Math.random() * 30.0) - 15.0;
+        let ry = (Math.random() * 30.0) - 15.0;
+        let rz = (Math.random() * 30.0) + 10.0;
+
+        for (let j = 0; j < 2500; j++) {
+          const dx = sigma * (ry - rx) * dt;
+          const dy = (rx * (rho - rz) - ry) * dt;
+          const dz = (rx * ry - beta * rz) * dt;
+          rx += dx;
+          ry += dy;
+          rz += dz;
+        }
+
+        particles.push({ x: rx, y: ry, z: rz, history: [] });
+      }
+
+      function resizeCanvas() {
+        if (!canvas || !landingSection) return;
+        const rect = landingSection.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        canvas.style.width = `${rect.width}px`;
+        canvas.style.height = `${rect.height}px`;
+        ctx!.scale(dpr, dpr);
+        
+        particles.forEach(p => p.history = []);
+      }
+
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+
+      function draw(currentTime = performance.now()) {
+        if (!ctx || !canvas || !isVisible) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.width / dpr;
+        const h = canvas.height / dpr;
+
+        let deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        if (deltaTime > 100) deltaTime = 100;
+
+        ctx.clearRect(0, 0, w, h);
+
+        let centerX = w * 0.5;
+        let centerY = h * 0.5;
+        let isMobile = w < 768;
+
+        if (titleEl && !isMobile) {
+          const titleRect = titleEl.getBoundingClientRect();
+          const landingRect = landingSection.getBoundingClientRect();
+          
+          // Balanced laptop/desktop positioning
+          centerX = (titleRect.right - landingRect.left) - 20;
+          centerY = (titleRect.top - landingRect.top) + (titleRect.height / 2) + 20;
+        } else if (isMobile) {
+          // Absolute centering strictly for mobile viewports
+          centerX = w * 0.5;
+          centerY = h * 0.5;
+        }
+
+        const zoomScale = 11.5; 
+
+        const simSpeedTarget = 32;
+        accumulator += deltaTime;
+
+        if (accumulator >= simSpeedTarget) {
+          for (let i = 0; i < MAX_PARTICLES; i++) {
+            const p = particles[i];
+
+            const dx = sigma * (p.y - p.x) * dt;
+            const dy = (p.x * (rho - p.z) - p.y) * dt;
+            const dz = (p.x * p.y - beta * p.z) * dt;
+
+            p.x += dx;
+            p.y += dy;
+            p.z += dz;
+
+            p.history.push({ x: p.x, y: p.y });
+            if (p.history.length > TRAIL_LENGTH) {
+              p.history.shift();
+            }
+          }
+          accumulator -= simSpeedTarget;
+        }
+
+        ctx.lineWidth = 0.85;
+        
+        // --- RESPONSIVE STYLE / OPACITY FOR GRADIENT ---
+        let gradient = ctx.createLinearGradient(centerX - 250, 0, centerX + 350, 0);
+        
+        if (isMobile) {
+          // Low-opacity, evenly centered layout styling for clear text overlay readability
+          gradient = ctx.createLinearGradient(0, 0, w, 0);
+          gradient.addColorStop(0, 'rgba(0, 255, 157, 0.12)');  
+          gradient.addColorStop(0.5, 'rgba(0, 255, 157, 0.18)'); 
+          gradient.addColorStop(1, 'rgba(0, 255, 157, 0.12)'); 
+        } else {
+          // Standard dynamic fade gradient for desktop alignment
+          gradient.addColorStop(0, 'rgba(0, 255, 157, 1)');  
+          gradient.addColorStop(0.4, 'rgba(0, 255, 157, 0.45)'); 
+          gradient.addColorStop(1, 'rgba(0, 255, 157, 0.01)'); 
+        }
+
+        ctx.strokeStyle = gradient;
+        ctx.beginPath();
+
+        for (let i = 0; i < MAX_PARTICLES; i++) {
+          const p = particles[i];
+          if (p.history.length < 2) continue;
+
+          const startX = centerX + p.history[0].x * zoomScale;
+          const startY = centerY + p.history[0].y * zoomScale;
+          ctx.moveTo(startX, startY);
+
+          for (let j = 1; j < p.history.length; j++) {
+            const point = p.history[j];
+            const screenX = centerX + point.x * zoomScale;
+            const screenY = centerY + point.y * zoomScale;
+            
+            const prevPoint = p.history[j - 1];
+            const prevScreenX = centerX + prevPoint.x * zoomScale;
+            
+            if (Math.abs(prevScreenX - screenX) < w / 4) {
+              ctx.lineTo(screenX, screenY);
+            } else {
+              ctx.moveTo(screenX, screenY);
+            }
+          }
+        }
+        ctx.stroke();
+
+        animationFrameId = requestAnimationFrame(draw);
+      }
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          isVisible = entry.isIntersecting;
+          if (isVisible) draw();
+          else cancelAnimationFrame(animationFrameId);
+        });
+      }, { threshold: 0 });
+
+      observer.observe(landingSection);
+    }
+  }
+</script>
+
+<style>
+  #attractor-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    opacity: 1;
+  }
+</style>

@@ -1,0 +1,207 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav id="nav">
+  <div class="container">
+    <a href="/" class="nav-logo">james<span>.</span>bray</a>
+    <ul class="nav-links">
+      <li><a href="/#projects">projects</a></li>
+      <li><a href="/#about">about</a></li>
+      <li><a href="/#contact">contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<slot />
+
+<footer>
+  <div class="container">
+    <p>© 2026 James Bray</p>
+    <ul class="footer-links">
+      <li><a href="https://github.com/jamesbrayy" target="_blank" rel="noopener noreferrer">github</a></li>
+      <li><a href="https://instagram.com/jamesbrayyyyy" target="_blank" rel="noopener noreferrer">instagram</a></li>
+      <li><a href="https://linkedin.com/in/jamesbrayy" target="_blank" rel="noopener noreferrer">linkedin</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('nav');
+  if (nav) {
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    });
+  }
+
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.project-card').forEach((card, i) => {
+    (card as HTMLElement).style.transitionDelay = `${i * 80}ms`;
+    revealObserver.observe(card);
+  });
+
+  ['about-text', 'about-stack', 'contact-line'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) revealObserver.observe(el);
+  });
+
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+</script>
+</body>
+</html>
+
+<style is:global>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0c;
+    --text: #e2e2e2;
+    --muted: #3a3a3a;
+    --muted-text: #888;
+    --accent: #00ff9d;
+    --border: #1e1e1e;
+    --font: 'JetBrains Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 32px;
+    position: relative;
+    z-index: 2;
+  }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    padding: 24px 0;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  nav.scrolled {
+    background: rgba(12,12,12,0.85);
+    backdrop-filter: blur(12px);
+    border-color: var(--border);
+  }
+  nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .nav-logo {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+  }
+  .nav-logo span { color: var(--accent); }
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 12px;
+    color: var(--muted-text);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+
+  footer {
+    padding: 40px 0;
+    position: relative;
+    background: var(--bg);
+    z-index: 10;
+  }
+  footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer p {
+    font-size: 11px;
+    color: var(--muted-text);
+    letter-spacing: 0.05em;
+  }
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 11px;
+    color: var(--muted-text);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  @media (max-width: 1000px) {
+    nav {
+      padding: 16px 0;
+    }
+    .nav-links { 
+      display: flex;
+      gap: 16px;
+    }
+    .nav-links a {
+      font-size: 11px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>

@@ -1,11 +1,359 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Layout from '../components/layout.astro';
+import Attractor from '../components/attractor.astro';
+import ProjectCard from '../components/projectcard.astro';
+import { projectsData } from '../data/projects.js';
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="homepage &ensp; // &ensp; j.bray">
+  <section class="landing">
+    <Attractor/>
+    
+    <div class="container">
+      <p class="landing-label"><span>//</span> academic and project portfolio</p>
+      <h1 class="landing-name" id="landing-name"><span class="cursor"></span></h1>
+      <p class="landing-desc" id="landing-desc">
+        Frontier Physics student at <em>The University of Western Australia</em>.
+      </p>
+      <div class="landing-meta" id="landing-meta">
+        <div class="landing-stat">
+          <label>specialisation</label>
+          <value>experimental physics</value>
+        </div>
+        <div class="landing-stat">
+          <label>level</label>
+          <value>undergraduate</value>
+        </div>
+        <div class="landing-stat">
+          <label>status</label>
+          <value id="discord-status"><span style="color:#3a3a3a">●</span> loading...</value>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">projects</span>
+        <span class="section-title">selected work</span>
+      </div>
+      <div class="projects-grid">
+        <ProjectCard 
+          tag={projectsData["vapor-x5"].tag}
+          title={projectsData["vapor-x5"].title}
+          desc={projectsData["vapor-x5"].desc}
+          href="/projects/vapor-x5"
+        />
+        <ProjectCard 
+          tag={projectsData["polar-imaging-cyberdeck"].tag}
+          title={projectsData["polar-imaging-cyberdeck"].title}
+          desc={projectsData["polar-imaging-cyberdeck"].desc}
+          href="/projects/polar-imaging-cyberdeck"
+        />
+        <ProjectCard 
+          tag={projectsData["highly-inefficient-coil-gun"].tag}
+          title={projectsData["highly-inefficient-coil-gun"].title}
+          desc={projectsData["highly-inefficient-coil-gun"].desc}
+          href="/projects/highly-inefficient-coil-gun"
+        />
+        <ProjectCard 
+          tag={projectsData["12kv-nst-spark-gap-tesla-coil"].tag}
+          title={projectsData["12kv-nst-spark-gap-tesla-coil"].title}
+          desc={projectsData["12kv-nst-spark-gap-tesla-coil"].desc}
+          href="/projects/12kv-nst-spark-gap-tesla-coil"
+        />
+      </div>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">about</span>
+        <span class="section-title">background</span>
+      </div>
+      <p class="about-text" id="about-text">
+        I am a physics undergraduate with a strong focus on the <em>experimental</em> and <em>hands-on</em> aspects of the discipline. 
+        While I value the theoretical framework of my coursework, I am most passionate about the implementation phase where I validate
+        equations on paper with real-world systems <em>at the bench</em>.
+        <br><br>
+        Outside of university, this manifests as a wide range of <em>self-driven projects</em>. I build, fly, and repair high-performance 
+        <em>FPV quadcopters</em>, design <em>high-voltage circuits</em> for experiments, and use <em>Python</em> to computationally model and visualise physical systems. 
+      </p>
+      <div class="about-stack" id="about-stack">
+        <span class="stack-tag">high voltage</span>
+        <span class="stack-tag">signal processing</span>
+        <span class="stack-tag">digital fabrication</span>
+        <span class="stack-tag">FPV / control systems</span>
+        <span class="stack-tag">python</span>
+        <span class="stack-tag">LaTeX</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">contact</span>
+        <span class="section-title">get in touch</span>
+      </div>
+      <p class="contact-line" id="contact-line">
+        Got an idea, question, or just want to talk physics - <a href="mailto:jamesmbray@outlook.com">jamesmbray@outlook.com</a>
+      </p>
+    </div>
+  </section>
 </Layout>
+
+<script>
+  const DISCORD_ID = '783832796808478731';
+
+  async function fetchDiscordPresence() {
+    const statusEl = document.getElementById('discord-status');
+    if (!statusEl) return;
+
+    try {
+      const response = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
+      const { data } = await response.json();
+
+      const statusMap = {
+        online: { color: 'var(--accent)', text: 'online' },
+        idle: { color: 'var(--accent)', text: 'online' },
+        dnd: { color: '#ff4a4a', text: 'busy' },
+        offline: { color: '#3a3a3a', text: 'offline' }
+      } as const;
+
+      const currentStatus = data.discord_status as keyof typeof statusMap;
+      const config = statusMap[currentStatus] || statusMap.offline;
+
+      let activityText: string = config.text;
+      if (data.activities && data.activities.length > 0) {
+        const mainActivity = data.activities.find((act: any) => act.type !== 4);
+        if (mainActivity) {
+          activityText = `${config.text} // ${mainActivity.name.toLowerCase()}`;
+        }
+      }
+
+      statusEl.innerHTML = `<span style="color:${config.color}">●</span> ${activityText}`;
+    } catch (err) {
+      statusEl.innerHTML = `<span style="color:#ff4a4a">●</span> status error`;
+    }
+  }
+
+  fetchDiscordPresence();
+  setInterval(fetchDiscordPresence, 30000);
+
+  const target = document.getElementById('landing-name');
+  const text = 'James\nBray.';
+  if (target) {
+    const cursor = target.querySelector('.cursor');
+    let i = 0;
+
+    function type() {
+      if (!target || !cursor) return;
+      if (i < text.length) {
+        const char = text[i];
+        if (char === '\n') {
+          const br = document.createElement('br');
+          target.insertBefore(br, cursor);
+        } else {
+          const span = document.createElement('span');
+          span.textContent = char;
+          span.style.opacity = '0';
+          span.style.transition = 'opacity 0.05s';
+          target.insertBefore(span, cursor);
+          requestAnimationFrame(() => { span.style.opacity = '1'; });
+        }
+        i++;
+        setTimeout(type, i < 6 ? 80 : 55);
+      } else {
+        document.getElementById('landing-desc')?.classList.add('visible');
+        document.getElementById('landing-meta')?.classList.add('visible');
+        
+        const canvasEl = document.getElementById('attractor-canvas');
+        if (canvasEl) {
+          canvasEl.style.transition = 'opacity 3.0s cubic-bezier(0.25, 1, 0.5, 1)';
+          canvasEl.style.opacity = '1'; 
+        }
+      }
+    }
+    setTimeout(type, 600);
+  }
+</script>
+
+<style>
+  .landing {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-bottom: 80px;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .landing-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+    margin-bottom: 24px;
+  }
+  .landing-label span { color: var(--accent); margin-right: 8px; }
+  .landing-name {
+    font-size: clamp(48px, 8vw, 88px);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .landing-name :global(.cursor) {
+    display: inline-block;
+    width: 3px;
+    height: 0.85em;
+    background: var(--accent);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .landing-desc {
+    margin-top: 40px;
+    max-width: 600px;
+    color: var(--muted-text);
+    font-size: 14px;
+    line-height: 1.8;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.6s 0.2s, transform 0.6s 0.2s;
+  }
+  .landing-desc.visible { opacity: 1; transform: none; }
+
+  .landing-desc em {
+    font-style: normal;
+    color: var(--text);
+  }
+
+  .landing-meta {
+    margin-top: 48px;
+    display: flex;
+    gap: 40px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.6s 0.4s, transform 0.6s 0.4s;
+  }
+  .landing-meta.visible { opacity: 1; transform: none; }
+  .landing-stat label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+    margin-bottom: 4px;
+  }
+  .landing-stat value {
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  section {
+    padding: 96px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 56px;
+  }
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted-text);
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .about-text {
+    font-size: 15px;
+    color: var(--muted-text);
+    line-height: 1.9;
+    max-width: 1000px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .about-text.visible { opacity: 1; transform: none; }
+  .about-text em {
+    font-style: normal;
+    color: var(--text);
+  }
+
+  .about-stack {
+    margin-top: 48px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.6s 0.2s, transform 0.6s 0.2s;
+  }
+  .about-stack.visible { opacity: 1; transform: none; }
+  .stack-tag {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted-text);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+  }
+
+  .contact-line {
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 300;
+    color: var(--muted-text);
+    line-height: 1.5;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .contact-line.visible { opacity: 1; transform: none; }
+  .contact-line a {
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent);
+    padding-bottom: 2px;
+    transition: color 0.2s;
+  }
+  .contact-line a:hover { color: var(--accent); }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s, transform 0.6s;
+  }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 600px) {
+    .projects-grid { grid-template-columns: 1fr; }
+    .landing-meta { flex-wrap: wrap; gap: 24px; }
+  }
+</style>
