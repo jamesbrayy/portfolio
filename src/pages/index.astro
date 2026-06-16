@@ -30,6 +30,11 @@ import { projectsData } from '../data/projects.js';
         </div>
       </div>
     </div>
+    <button class="scroll-arrow" id="scroll-arrow" aria-label="Scroll to projects">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M4 7L10 13L16 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
   </section>
 
   <section id="projects">
@@ -105,6 +110,13 @@ import { projectsData } from '../data/projects.js';
 </Layout>
 
 <script>
+  const scrollArrow = document.getElementById('scroll-arrow');
+  if (scrollArrow) {
+    scrollArrow.addEventListener('click', () => {
+      document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
   const DISCORD_ID = '783832796808478731';
 
   async function fetchDiscordPresence() {
@@ -168,6 +180,7 @@ import { projectsData } from '../data/projects.js';
       } else {
         document.getElementById('landing-desc')?.classList.add('visible');
         document.getElementById('landing-meta')?.classList.add('visible');
+        document.getElementById('scroll-arrow')?.classList.add('visible');
         
         const canvasEl = document.getElementById('attractor-canvas');
         if (canvasEl) {
@@ -354,5 +367,45 @@ import { projectsData } from '../data/projects.js';
   @media (max-width: 600px) {
     .projects-grid { grid-template-columns: 1fr; }
     .landing-meta { flex-wrap: wrap; gap: 24px; }
+  }
+
+  .scroll-arrow {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+
+    background: rgba(12, 12, 12, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    color: var(--muted-text);
+    cursor: pointer;
+
+    opacity: 0;
+    transition: opacity 0.6s 1.2s, color 0.2s, border-color 0.2s;
+    animation: arrow-bob 2.5s ease-in-out 1.8s infinite;
+  }
+
+  .scroll-arrow.visible {
+    opacity: 1;
+  }
+
+  .scroll-arrow:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  @keyframes arrow-bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(5px); }
   }
 </style>
