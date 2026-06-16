@@ -88,11 +88,9 @@
           const titleRect = titleEl.getBoundingClientRect();
           const landingRect = landingSection.getBoundingClientRect();
           
-          // Balanced laptop/desktop positioning
           centerX = (titleRect.right - landingRect.left) - 20;
           centerY = (titleRect.top - landingRect.top) + (titleRect.height / 2) + 20;
         } else if (isMobile) {
-          // Absolute centering strictly for mobile viewports
           centerX = w * 0.5;
           centerY = h * 0.5;
         }
@@ -123,18 +121,15 @@
         }
 
         ctx.lineWidth = 0.85;
-        
-        // --- RESPONSIVE STYLE / OPACITY FOR GRADIENT ---
+
         let gradient = ctx.createLinearGradient(centerX - 250, 0, centerX + 350, 0);
         
         if (isMobile) {
-          // Low-opacity, evenly centered layout styling for clear text overlay readability
           gradient = ctx.createLinearGradient(0, 0, w, 0);
           gradient.addColorStop(0, 'rgba(0, 255, 157, 0.12)');  
           gradient.addColorStop(0.5, 'rgba(0, 255, 157, 0.18)'); 
           gradient.addColorStop(1, 'rgba(0, 255, 157, 0.12)'); 
         } else {
-          // Standard dynamic fade gradient for desktop alignment
           gradient.addColorStop(0, 'rgba(0, 255, 157, 1)');  
           gradient.addColorStop(0.4, 'rgba(0, 255, 157, 0.45)'); 
           gradient.addColorStop(1, 'rgba(0, 255, 157, 0.01)'); 
