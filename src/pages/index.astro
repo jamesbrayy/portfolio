@@ -392,7 +392,6 @@ import { projectsData } from '../data/projects.js';
 
     opacity: 0;
     transition: opacity 0.6s 1.2s, color 0.2s, border-color 0.2s;
-    animation: arrow-bob 2.5s ease-in-out 1.8s infinite;
   }
 
   .scroll-arrow.visible {
@@ -402,6 +401,7 @@ import { projectsData } from '../data/projects.js';
   .scroll-arrow:hover {
     color: var(--accent);
     border-color: var(--accent);
+    animation: arrow-bob 0.6s ease-in-out infinite;
   }
 
   @keyframes arrow-bob {
