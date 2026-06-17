@@ -91,7 +91,6 @@ const {title} = Astro.props;
     });
   }
 
-  // Handle Nav Links (Projects, About, Contact)
   navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
       if (isHomepage()) {
@@ -118,7 +117,6 @@ document.querySelectorAll<HTMLElement>('.edu-subject-scroll-wrap').forEach(wrap 
   const btnRight = wrap.querySelector<HTMLElement>('.edu-scroll-btn.right');
   if (!scroll || !btnLeft || !btnRight) return;
 
-  // update arrow visibility based on scroll position
   function updateBtns() {
     if (!scroll) return;
     const atStart = scroll.scrollLeft <= 2;
@@ -131,12 +129,10 @@ document.querySelectorAll<HTMLElement>('.edu-subject-scroll-wrap').forEach(wrap 
   new ResizeObserver(updateBtns).observe(scroll);
   updateBtns();
 
-  // button click scroll
   const STEP = 160;
   btnLeft.addEventListener('click', () => scroll.scrollBy({ left: -STEP, behavior: 'smooth' }));
   btnRight.addEventListener('click', () => scroll.scrollBy({ left: STEP, behavior: 'smooth' }));
 
-  // click-drag scroll
   let isDown = false, startX = 0, startScroll = 0;
   scroll.addEventListener('mousedown', e => {
     isDown = true;

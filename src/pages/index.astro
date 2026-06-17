@@ -295,7 +295,6 @@ import { projectsData } from '../data/projects.js';
     setTimeout(type, 600);
   }
 
-  // ── Subject tag scrollers ────────────────────────────────────────
   document.querySelectorAll<HTMLElement>('.edu-subject-scroll-wrap').forEach(wrap => {
     const scroll  = wrap.querySelector<HTMLElement>('.edu-subject-scroll')!;
     const btnLeft = wrap.querySelector<HTMLElement>('.edu-scroll-btn.left')!;
@@ -316,7 +315,6 @@ import { projectsData } from '../data/projects.js';
     btnLeft.addEventListener('click',  () => scroll.scrollBy({ left: -STEP, behavior: 'smooth' }));
     btnRight.addEventListener('click', () => scroll.scrollBy({ left:  STEP, behavior: 'smooth' }));
 
-    // click-drag
     let isDown = false, startX = 0, startScroll = 0;
     scroll.addEventListener('mousedown', e => {
       isDown = true;
@@ -334,7 +332,6 @@ import { projectsData } from '../data/projects.js';
       scroll.scrollLeft = startScroll - (e.pageX - startX);
     });
 
-    // scroll-wheel horizontal scroll when hovering
     scroll.addEventListener('wheel', e => {
       if (e.deltaY === 0) return;
       e.preventDefault();
@@ -548,10 +545,8 @@ import { projectsData } from '../data/projects.js';
     -ms-overflow-style: none;
     cursor: grab;
     user-select: none;
-    /* Borders completely removed */
     border-left: none;
     border-right: none;
-    /* Added subtle vertical padding to prevent the layout from stretching downwards */
     padding: 4px 0; 
   }
   .edu-subject-scroll::-webkit-scrollbar { display: none; }
