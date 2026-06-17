@@ -1,0 +1,72 @@
+---
+import Layout from '../../components/layout.astro';
+import { projectsData } from '../../data/projects.js';
+import springDampingImage from '../../assets/spring-damping.jpg';
+const project = projectsData["spring-damping-investigation"];
+---
+
+<Layout title={`${project.title} \u2002 // \u2002 james bray`} >
+  <article class="project-page">
+    <div class="container">
+      
+      <header class="project-header reveal">
+        <a href="/portfolio#projects" class="back-link">← back to projects</a>
+        <div class="project-meta-top">
+          <span class="project-tag">{project.tag}</span>
+          <span class="project-date">{project.date}</span>
+        </div>
+        <h1 class="project-title">{project.title}</h1>
+        <p class="project-lead">{project.desc}</p>
+      </header>
+
+      <div class="project-hero-image reveal">
+        <img src={springDampingImage.src} alt={project.title} />
+      </div>
+
+      <div class="project-layout">
+        <aside class="project-specs reveal">
+          <div class="spec-group">
+            <label>category</label>
+            <value>{project.category}</value>
+          </div>
+          <div class="spec-group">
+            <label>stack</label>
+            <value>{project.stack}</value>
+          </div>
+          <div class="spec-group">
+            <label>status</label>
+            <value>{project.status}</value>
+          </div>
+        </aside>
+
+        <div class="project-content reveal">
+          <p>work in progress!</p>
+        </div>
+      </div>
+
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .project-page { padding-top: 140px; padding-bottom: 96px; }
+  .back-link { display: inline-block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); text-decoration: none; margin-bottom: 32px; transition: transform 0.2s; }
+  .back-link:hover { transform: translateX(-4px); }
+  .project-meta-top { display: flex; gap: 16px; margin-bottom: 12px; }
+  .project-tag { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .project-date { font-size: 11px; color: var(--muted-text); }
+  .project-title { font-size: clamp(32px, 6vw, 56px); font-weight: 300; line-height: 1.1; letter-spacing: -0.02em; color: var(--text); margin-bottom: 24px; }
+  .project-lead { font-size: 18px; color: var(--muted-text); line-height: 1.6; max-width: 1000px; margin-bottom: 48px; }
+  .project-hero-image { width: 100%; border: 1px solid var(--border); margin-bottom: 56px; overflow: hidden; background: #111; aspect-ratio: 16 / 9; }
+  .project-hero-image img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+  .project-layout { display: grid; grid-template-columns: 200px 1fr; gap: 64px; align-items: start; }
+  .project-specs { display: flex; flex-direction: column; gap: 24px; position: sticky; top: 120px; }
+  .spec-group label { display: block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-text); margin-bottom: 4px; }
+  .spec-group value { font-size: 13px; color: var(--text); }
+  .project-content { color: var(--muted-text); font-size: 15px; line-height: 1.8; }
+  .project-content h2 { font-size: 18px; font-weight: 500; color: var(--text); margin-top: 40px; margin-bottom: 16px; }
+  .project-content h2:first-of-type { margin-top: 0; }
+  .project-content p { margin-bottom: 24px; }
+  .project-content blockquote { border-left: 2px solid var(--accent); padding-left: 20px; margin: 32px 0; font-style: italic; color: var(--text); }
+  @media (max-width: 700px) { .project-layout { grid-template-columns: 1fr; gap: 40px; } .project-specs { position: relative; top: 0; flex-direction: row; flex-wrap: wrap; gap: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border); } }
+</style>
