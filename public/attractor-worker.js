@@ -5,7 +5,7 @@ const dt    = 0.0012;
 
 const MAX_PARTICLES = 600;
 const TRAIL_LENGTH  = 100;
-const FPS_CAP       = 33; // ~30fps render cap
+const FPS_CAP       = 33;
 
 let ctx            = null;
 let w              = 0;
@@ -150,7 +150,7 @@ self.onmessage = (e) => {
   if (type === 'init') {
     const { canvas, width, height, devicePixelRatio, cx, cy, mobile } = e.data;
     ctx      = canvas.getContext('2d');
-    dpr      = Math.min(devicePixelRatio, 1.5); // cap DPR at 1.5
+    dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
     h        = height;
     centerX  = cx;
@@ -164,13 +164,15 @@ self.onmessage = (e) => {
 
   if (type === 'resize') {
     const { width, height, devicePixelRatio, cx, cy, mobile } = e.data;
+    const newCssW = width / Math.min(devicePixelRatio, 1.5);
+    const oldCssW = w / dpr;
     dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
     h        = height;
     centerX  = cx;
     centerY  = cy;
     isMobile = mobile;
-    clearHistory();
+    if (Math.abs(newCssW - oldCssW) > 1) clearHistory();
     buildGradient();
   }
 

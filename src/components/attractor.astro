@@ -57,14 +57,18 @@
         cx, cy, mobile,
       }, [offscreen]);
 
+      let lastCssW = 0;
+
       window.addEventListener('resize', () => {
         const d = getDims();
-        // can't set canvas dimensions after transfer — worker owns it now
-        // just send new logical dims and center
+        if (d.cssW === lastCssW) return;
+        lastCssW = d.cssW;
         const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
         worker.postMessage({ type: 'resize', width: d.width, height: d.height,
           devicePixelRatio: d.dpr, cx, cy, mobile });
       });
+
+      lastCssW = dims.cssW;
 
       let ticking = false;
       window.addEventListener('scroll', () => {
