@@ -35,24 +35,6 @@ export const projectsData = {
     stack: "neon sign transformer, capacitors, 3D printing",
     status: "in progress"
   },
-  "omnibot": {
-    title: "OmniBot",
-    tag: "robotics / control systems",
-    desc: "A low-budget remote-controlled robot employing an omnidirectional drivetrain.",
-    date: "2026",
-    category: "hardware / fabrication",
-    stack: "ATMega 328P, pcb design, bluetooth",
-    status: "completed"
-  },
-  "spring-damping-investigation": {
-    title: "Factors Affecting the Damping Constant of a Spring System",
-    tag: "mechanical engineering / analysis",
-    desc: "An report from an investigation into factors affecting the damping constant of a vertical spring system.",
-    date: "2026",
-    category: "hardware / fabrication",
-     stack: "latex, differential equations, experimental design",
-    status: "in progress"
-  },
   "project-template": {
     title: "Project Template",
     tag: "tag / tag",
