@@ -80,13 +80,17 @@ const {title} = Astro.props;
     logoLink.addEventListener('click', (e) => {
       if (isHomepage()) {
         e.preventDefault();
-        
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
 
-        history.pushState(null, '', window.location.pathname);
+        // suppress any native scroll triggered by hash removal
+        document.documentElement.style.scrollBehavior = 'auto';
+
+        history.replaceState(null, '', window.location.pathname);
+
+        // let the DOM settle for a frame before smooth scrolling
+        requestAnimationFrame(() => {
+          document.documentElement.style.scrollBehavior = '';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
       }
     });
   }
