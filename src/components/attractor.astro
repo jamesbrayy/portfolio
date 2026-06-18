@@ -13,7 +13,6 @@
 
       const worker = new Worker('/portfolio/attractor-worker.js');
 
-      // ── layout helpers ───────────────────────────────────────────
       function getCenter(cw: number, ch: number) {
         const isMobile = cw < 768;
         if (!isMobile && titleEl) {
@@ -40,7 +39,6 @@
         };
       }
 
-      // ── init — transfer canvas to worker ─────────────────────────
       const dims = getDims();
       canvas.width  = dims.width;
       canvas.height = dims.height;
@@ -59,7 +57,6 @@
         cx, cy, mobile,
       }, [offscreen]);
 
-      // ── resize ───────────────────────────────────────────────────
       window.addEventListener('resize', () => {
         const d = getDims();
         // can't set canvas dimensions after transfer — worker owns it now
@@ -69,8 +66,6 @@
           devicePixelRatio: d.dpr, cx, cy, mobile });
       });
 
-      // ── center update on scroll (title moves relative to canvas) ─
-      // only needed while landing is visible; cheap to run
       let ticking = false;
       window.addEventListener('scroll', () => {
         if (ticking) return;
@@ -83,7 +78,6 @@
         });
       }, { passive: true });
 
-      // ── visibility ───────────────────────────────────────────────
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           worker.postMessage({ type: 'visible', value: entry.isIntersecting });
@@ -94,7 +88,6 @@
     }
 
   } else if (canvas && !prefersReducedMotion) {
-    // OffscreenCanvas not supported — fall back to original main-thread version
     const ctx = canvas.getContext('2d');
     const landingSection = document.querySelector('.landing') as HTMLElement;
     const titleEl = document.getElementById('landing-name');
