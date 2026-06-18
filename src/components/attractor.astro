@@ -4,181 +4,188 @@
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas = document.getElementById('attractor-canvas') as HTMLCanvasElement | null;
 
-  if (canvas && !prefersReducedMotion) {
+  if (canvas && !prefersReducedMotion && typeof OffscreenCanvas !== 'undefined') {
+    const landingSection = document.querySelector('.landing') as HTMLElement;
+    const titleEl        = document.getElementById('landing-name');
+
+    if (landingSection) {
+      canvas.style.opacity = '0';
+
+      const worker = new Worker('/portfolio/attractor-worker.js');
+
+      // ── layout helpers ───────────────────────────────────────────
+      function getCenter(cw: number, ch: number) {
+        const isMobile = cw < 768;
+        if (!isMobile && titleEl) {
+          const titleRect   = titleEl.getBoundingClientRect();
+          const landingRect = landingSection.getBoundingClientRect();
+          return {
+            cx: (titleRect.right - landingRect.left) - 20,
+            cy: (titleRect.top  - landingRect.top) + titleRect.height / 2 + 20,
+            mobile: false,
+          };
+        }
+        return { cx: cw / 2, cy: ch / 2, mobile: true };
+      }
+
+      function getDims() {
+        const rect = landingSection.getBoundingClientRect();
+        const dpr  = window.devicePixelRatio || 1;
+        return {
+          width:  rect.width  * dpr,
+          height: rect.height * dpr,
+          cssW:   rect.width,
+          cssH:   rect.height,
+          dpr,
+        };
+      }
+
+      // ── init — transfer canvas to worker ─────────────────────────
+      const dims = getDims();
+      canvas.width  = dims.width;
+      canvas.height = dims.height;
+      canvas.style.width  = `${dims.cssW}px`;
+      canvas.style.height = `${dims.cssH}px`;
+
+      const offscreen = canvas.transferControlToOffscreen();
+      const { cx, cy, mobile } = getCenter(dims.cssW, dims.cssH);
+
+      worker.postMessage({
+        type:   'init',
+        canvas: offscreen,
+        width:  dims.width,
+        height: dims.height,
+        devicePixelRatio: dims.dpr,
+        cx, cy, mobile,
+      }, [offscreen]);
+
+      // ── resize ───────────────────────────────────────────────────
+      window.addEventListener('resize', () => {
+        const d = getDims();
+        // can't set canvas dimensions after transfer — worker owns it now
+        // just send new logical dims and center
+        const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
+        worker.postMessage({ type: 'resize', width: d.width, height: d.height,
+          devicePixelRatio: d.dpr, cx, cy, mobile });
+      });
+
+      // ── center update on scroll (title moves relative to canvas) ─
+      // only needed while landing is visible; cheap to run
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          const d = getDims();
+          const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
+          worker.postMessage({ type: 'center', cx, cy, mobile });
+          ticking = false;
+        });
+      }, { passive: true });
+
+      // ── visibility ───────────────────────────────────────────────
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          worker.postMessage({ type: 'visible', value: entry.isIntersecting });
+        });
+      }, { threshold: 0.1 });
+
+      observer.observe(landingSection);
+    }
+
+  } else if (canvas && !prefersReducedMotion) {
+    // OffscreenCanvas not supported — fall back to original main-thread version
     const ctx = canvas.getContext('2d');
     const landingSection = document.querySelector('.landing') as HTMLElement;
     const titleEl = document.getElementById('landing-name');
 
     if (ctx && landingSection) {
-      let isVisible = true;
+      let isVisible = false;
       let animationFrameId: number;
       let lastTime = performance.now();
       let accumulator = 0;
-
       canvas.style.opacity = '0';
 
-      const sigma = 10.0;
-      const rho = 28.0;
-      const beta = 8.0 / 3.0;
-      const dt = 0.0012; 
+      const sigma = 10, rho = 28, beta = 8 / 3, dt = 0.0012;
+      const MAX_PARTICLES = 300, TRAIL_LENGTH = 60;
 
-      const MAX_PARTICLES = 600; 
-      const TRAIL_LENGTH = 100; 
-      
-      const particles: Array<{
-        x: number, 
-        y: number, 
-        z: number, 
-        history: Array<{x: number, y: number}>
-      }> = [];
-
+      const particles: Array<{ x: number; y: number; z: number; history: {x:number,y:number}[] }> = [];
       for (let i = 0; i < MAX_PARTICLES; i++) {
-        let rx = (Math.random() * 30.0) - 15.0;
-        let ry = (Math.random() * 30.0) - 15.0;
-        let rz = (Math.random() * 30.0) + 10.0;
-
+        let rx = Math.random()*30-15, ry = Math.random()*30-15, rz = Math.random()*30+10;
         for (let j = 0; j < 2500; j++) {
-          const dx = sigma * (ry - rx) * dt;
-          const dy = (rx * (rho - rz) - ry) * dt;
-          const dz = (rx * ry - beta * rz) * dt;
-          rx += dx;
-          ry += dy;
-          rz += dz;
+          rx += sigma*(ry-rx)*dt; ry += (rx*(rho-rz)-ry)*dt; rz += (rx*ry-beta*rz)*dt;
         }
-
         particles.push({ x: rx, y: ry, z: rz, history: [] });
       }
 
       function resizeCanvas() {
-        if (!canvas || !landingSection) return;
         const rect = landingSection.getBoundingClientRect();
-        const dpr = window.devicePixelRatio || 1;
-        
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
+        const dpr  = window.devicePixelRatio || 1;
+        canvas!.width  = rect.width  * dpr;
+        canvas!.height = rect.height * dpr;
+        canvas!.style.width  = `${rect.width}px`;
+        canvas!.style.height = `${rect.height}px`;
         ctx!.scale(dpr, dpr);
-        
         particles.forEach(p => p.history = []);
       }
-
       window.addEventListener('resize', resizeCanvas);
       resizeCanvas();
 
-      function draw(currentTime = performance.now()) {
-        if (!ctx || !canvas || !isVisible) return;
-
+      function draw(now = performance.now()) {
+        if (!isVisible) return;
         const dpr = window.devicePixelRatio || 1;
-        const w = canvas.width / dpr;
-        const h = canvas.height / dpr;
+        const cw  = canvas!.width / dpr, ch = canvas!.height / dpr;
+        const delta = Math.min(now - lastTime, 100);
+        lastTime = now;
+        accumulator += delta;
+        ctx!.clearRect(0, 0, cw, ch);
 
-        let deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
-
-        if (deltaTime > 100) deltaTime = 100;
-
-        ctx.clearRect(0, 0, w, h);
-
-        let centerX = w * 0.5;
-        let centerY = h * 0.5;
-        let isMobile = w < 768;
-
-        if (titleEl && !isMobile) {
-          const titleRect = titleEl.getBoundingClientRect();
-          const landingRect = landingSection.getBoundingClientRect();
-          
-          centerX = (titleRect.right - landingRect.left) - 20;
-          centerY = (titleRect.top - landingRect.top) + (titleRect.height / 2) + 20;
-        } else if (isMobile) {
-          centerX = w * 0.5;
-          centerY = h * 0.5;
+        let cx = cw/2, cy = ch/2;
+        const mob = cw < 768;
+        if (!mob && titleEl) {
+          const tr = titleEl.getBoundingClientRect();
+          const lr = landingSection.getBoundingClientRect();
+          cx = (tr.right - lr.left) - 20;
+          cy = (tr.top - lr.top) + tr.height/2 + 20;
         }
 
-        const zoomScale = 11.5; 
-
-        const simSpeedTarget = 32;
-        accumulator += deltaTime;
-
-        if (accumulator >= simSpeedTarget) {
-          for (let i = 0; i < MAX_PARTICLES; i++) {
-            const p = particles[i];
-
-            const dx = sigma * (p.y - p.x) * dt;
-            const dy = (p.x * (rho - p.z) - p.y) * dt;
-            const dz = (p.x * p.y - beta * p.z) * dt;
-
-            p.x += dx;
-            p.y += dy;
-            p.z += dz;
-
-            p.history.push({ x: p.x, y: p.y });
-            if (p.history.length > TRAIL_LENGTH) {
-              p.history.shift();
-            }
-          }
-          accumulator -= simSpeedTarget;
+        if (accumulator >= 32) {
+          particles.forEach(p => {
+            p.x += sigma*(p.y-p.x)*dt;
+            p.y += (p.x*(rho-p.z)-p.y)*dt;
+            p.z += (p.x*p.y-beta*p.z)*dt;
+            p.history.push({x:p.x, y:p.y});
+            if (p.history.length > TRAIL_LENGTH) p.history.shift();
+          });
+          accumulator -= 32;
         }
 
-        ctx.lineWidth = 0.85;
+        let g = mob
+          ? (() => { const g = ctx!.createLinearGradient(0,0,cw,0); g.addColorStop(0,'rgba(0,255,157,.12)'); g.addColorStop(.5,'rgba(0,255,157,.18)'); g.addColorStop(1,'rgba(0,255,157,.12)'); return g; })()
+          : (() => { const g = ctx!.createLinearGradient(cx-250,0,cx+350,0); g.addColorStop(0,'rgba(0,255,157,1)'); g.addColorStop(.4,'rgba(0,255,157,.45)'); g.addColorStop(1,'rgba(0,255,157,.01)'); return g; })();
 
-        let gradient = ctx.createLinearGradient(centerX - 250, 0, centerX + 350, 0);
-        
-        if (isMobile) {
-          gradient = ctx.createLinearGradient(0, 0, w, 0);
-          gradient.addColorStop(0, 'rgba(0, 255, 157, 0.12)');  
-          gradient.addColorStop(0.5, 'rgba(0, 255, 157, 0.18)'); 
-          gradient.addColorStop(1, 'rgba(0, 255, 157, 0.12)'); 
-        } else {
-          gradient.addColorStop(0, 'rgba(0, 255, 157, 1)');  
-          gradient.addColorStop(0.4, 'rgba(0, 255, 157, 0.45)'); 
-          gradient.addColorStop(1, 'rgba(0, 255, 157, 0.01)'); 
-        }
-
-        ctx.strokeStyle = gradient;
-        ctx.beginPath();
-
-        for (let i = 0; i < MAX_PARTICLES; i++) {
-          const p = particles[i];
-          if (p.history.length < 2) continue;
-
-          const startX = centerX + p.history[0].x * zoomScale;
-          const startY = centerY + p.history[0].y * zoomScale;
-          ctx.moveTo(startX, startY);
-
+        ctx!.strokeStyle = g; ctx!.lineWidth = 0.85; ctx!.beginPath();
+        particles.forEach(p => {
+          if (p.history.length < 2) return;
+          ctx!.moveTo(cx + p.history[0].x*11.5, cy + p.history[0].y*11.5);
           for (let j = 1; j < p.history.length; j++) {
-            const point = p.history[j];
-            const screenX = centerX + point.x * zoomScale;
-            const screenY = centerY + point.y * zoomScale;
-            
-            const prevPoint = p.history[j - 1];
-            const prevScreenX = centerX + prevPoint.x * zoomScale;
-            
-            if (Math.abs(prevScreenX - screenX) < w / 4) {
-              ctx.lineTo(screenX, screenY);
-            } else {
-              ctx.moveTo(screenX, screenY);
-            }
+            const sx = cx + p.history[j].x*11.5, sy = cy + p.history[j].y*11.5;
+            const px2 = cx + p.history[j-1].x*11.5;
+            Math.abs(px2-sx) < cw/4 ? ctx!.lineTo(sx,sy) : ctx!.moveTo(sx,sy);
           }
-        }
-        ctx.stroke();
-
+        });
+        ctx!.stroke();
         animationFrameId = requestAnimationFrame(draw);
       }
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          isVisible = entry.isIntersecting;
-          if (isVisible) {
-            lastTime = performance.now();
-            accumulator = 0;
-            draw();
-          }
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          isVisible = e.isIntersecting;
+          if (isVisible) { lastTime = performance.now(); accumulator = 0; draw(); }
           else cancelAnimationFrame(animationFrameId);
         });
       }, { threshold: 0.1 });
-
-      observer.observe(landingSection);
+      obs.observe(landingSection);
     }
   }
 </script>
@@ -186,14 +193,11 @@
 <style>
   #attractor-canvas {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     z-index: 1;
     pointer-events: none;
     mix-blend-mode: screen;
-    opacity: 1;
-    transition:persist
+    will-change: transform;
   }
 </style>
