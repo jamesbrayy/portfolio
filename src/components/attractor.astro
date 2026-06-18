@@ -169,10 +169,14 @@
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
           isVisible = entry.isIntersecting;
-          if (isVisible) draw();
+          if (isVisible) {
+            lastTime = performance.now();
+            accumulator = 0;
+            draw();
+          }
           else cancelAnimationFrame(animationFrameId);
         });
-      }, { threshold: 0 });
+      }, { threshold: 0.1 });
 
       observer.observe(landingSection);
     }
