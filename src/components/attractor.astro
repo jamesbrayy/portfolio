@@ -4,6 +4,27 @@
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const canvas = document.getElementById('attractor-canvas') as HTMLCanvasElement | null;
 
+  const isLowPower = (() => {
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4;
+    return cores <= 4 || mem <= 4;
+  })();
+
+  const isSmallScreen = window.innerWidth < 900;
+  const quality = prefersReducedMotion
+    ? 'low'
+    : isLowPower
+      ? 'low'
+      : isSmallScreen
+        ? 'medium'
+        : 'high';
+
+  const config = {
+    particleBudget: quality === 'low' ? 180 : quality === 'medium' ? 240 : 320,
+    trailLength: quality === 'low' ? 36 : quality === 'medium' ? 52 : 80,
+    fpsCap: quality === 'low' ? 40 : quality === 'medium' ? 33 : 30,
+  };
+
   if (canvas && !prefersReducedMotion && typeof OffscreenCanvas !== 'undefined') {
     const landingSection = document.querySelector('.landing') as HTMLElement;
     const titleEl        = document.getElementById('landing-name');
@@ -55,6 +76,7 @@
         height: dims.height,
         devicePixelRatio: dims.dpr,
         cx, cy, mobile,
+        config,
       }, [offscreen]);
 
       let lastCssW = 0;
@@ -69,6 +91,10 @@
       });
 
       lastCssW = dims.cssW;
+
+      document.addEventListener('visibilitychange', () => {
+        worker.postMessage({ type: 'visible', value: !document.hidden });
+      });
 
       let ticking = false;
       window.addEventListener('scroll', () => {
@@ -104,10 +130,12 @@
       canvas.style.opacity = '0';
 
       const sigma = 10, rho = 28, beta = 8 / 3, dt = 0.0012;
-      const MAX_PARTICLES = 300, TRAIL_LENGTH = 60;
+      const particleBudget = quality === 'low' ? 140 : quality === 'medium' ? 220 : 300;
+      const trailLength = quality === 'low' ? 24 : quality === 'medium' ? 40 : 60;
+      const simInterval = quality === 'low' ? 48 : 32;
 
       const particles: Array<{ x: number; y: number; z: number; history: {x:number,y:number}[] }> = [];
-      for (let i = 0; i < MAX_PARTICLES; i++) {
+      for (let i = 0; i < particleBudget; i++) {
         let rx = Math.random()*30-15, ry = Math.random()*30-15, rz = Math.random()*30+10;
         for (let j = 0; j < 2500; j++) {
           rx += sigma*(ry-rx)*dt; ry += (rx*(rho-rz)-ry)*dt; rz += (rx*ry-beta*rz)*dt;
@@ -146,22 +174,22 @@
           cy = (tr.top - lr.top) + tr.height/2 + 20;
         }
 
-        if (accumulator >= 32) {
+        if (accumulator >= simInterval) {
           particles.forEach(p => {
             p.x += sigma*(p.y-p.x)*dt;
             p.y += (p.x*(rho-p.z)-p.y)*dt;
             p.z += (p.x*p.y-beta*p.z)*dt;
             p.history.push({x:p.x, y:p.y});
-            if (p.history.length > TRAIL_LENGTH) p.history.shift();
+            if (p.history.length > trailLength) p.history.shift();
           });
-          accumulator -= 32;
+          accumulator -= simInterval;
         }
 
         let g = mob
           ? (() => { const g = ctx!.createLinearGradient(0,0,cw,0); g.addColorStop(0,'rgba(0,255,157,.12)'); g.addColorStop(.5,'rgba(0,255,157,.18)'); g.addColorStop(1,'rgba(0,255,157,.12)'); return g; })()
           : (() => { const g = ctx!.createLinearGradient(cx-250,0,cx+350,0); g.addColorStop(0,'rgba(0,255,157,1)'); g.addColorStop(.4,'rgba(0,255,157,.45)'); g.addColorStop(1,'rgba(0,255,157,.01)'); return g; })();
 
-        ctx!.strokeStyle = g; ctx!.lineWidth = 0.85; ctx!.beginPath();
+        ctx!.strokeStyle = g; ctx!.lineWidth = quality === 'low' ? 0.65 : 0.85; ctx!.beginPath();
         particles.forEach(p => {
           if (p.history.length < 2) return;
           ctx!.moveTo(cx + p.history[0].x*11.5, cy + p.history[0].y*11.5);

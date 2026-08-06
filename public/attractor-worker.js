@@ -3,9 +3,9 @@ const rho   = 28.0;
 const beta  = 8.0 / 3.0;
 const dt    = 0.0012;
 
-const MAX_PARTICLES = 600;
-const TRAIL_LENGTH  = 100;
-const FPS_CAP       = 33;
+const DEFAULT_MAX_PARTICLES = 600;
+const DEFAULT_TRAIL_LENGTH  = 100;
+const DEFAULT_FPS_CAP       = 33;
 
 let ctx            = null;
 let w              = 0;
@@ -19,20 +19,24 @@ let rafId          = null;
 let lastFrameTime  = 0;
 let simIntervalId  = null;
 let cachedGradient = null;
+let activeParticles = DEFAULT_MAX_PARTICLES;
+let activeTrailLength = DEFAULT_TRAIL_LENGTH;
+let fpsCap = DEFAULT_FPS_CAP;
+let simIntervalMs = 32;
 
-const px     = new Float64Array(MAX_PARTICLES);
-const py     = new Float64Array(MAX_PARTICLES);
-const pz     = new Float64Array(MAX_PARTICLES);
-const histX  = Array.from({ length: MAX_PARTICLES }, () => new Float32Array(TRAIL_LENGTH));
-const histY  = Array.from({ length: MAX_PARTICLES }, () => new Float32Array(TRAIL_LENGTH));
-const histLen  = new Int32Array(MAX_PARTICLES);
-const histHead = new Int32Array(MAX_PARTICLES);
+const px     = new Float64Array(DEFAULT_MAX_PARTICLES);
+const py     = new Float64Array(DEFAULT_MAX_PARTICLES);
+const pz     = new Float64Array(DEFAULT_MAX_PARTICLES);
+const histX  = Array.from({ length: DEFAULT_MAX_PARTICLES }, () => new Float32Array(DEFAULT_TRAIL_LENGTH));
+const histY  = Array.from({ length: DEFAULT_MAX_PARTICLES }, () => new Float32Array(DEFAULT_TRAIL_LENGTH));
+const histLen  = new Int32Array(DEFAULT_MAX_PARTICLES);
+const histHead = new Int32Array(DEFAULT_MAX_PARTICLES);
 
-const screenX = new Float32Array(MAX_PARTICLES * TRAIL_LENGTH);
-const screenY = new Float32Array(MAX_PARTICLES * TRAIL_LENGTH);
+const screenX = new Float32Array(DEFAULT_MAX_PARTICLES * DEFAULT_TRAIL_LENGTH);
+const screenY = new Float32Array(DEFAULT_MAX_PARTICLES * DEFAULT_TRAIL_LENGTH);
 
 function initParticles() {
-  for (let i = 0; i < MAX_PARTICLES; i++) {
+  for (let i = 0; i < activeParticles; i++) {
     let rx = Math.random() * 30 - 15;
     let ry = Math.random() * 30 - 15;
     let rz = Math.random() * 30 + 10;
@@ -49,7 +53,7 @@ function initParticles() {
 }
 
 function stepSim() {
-  for (let i = 0; i < MAX_PARTICLES; i++) {
+  for (let i = 0; i < activeParticles; i++) {
     const dx = sigma * (py[i] - px[i]) * dt;
     const dy = (px[i] * (rho - pz[i]) - py[i]) * dt;
     const dz = (px[i] * py[i] - beta * pz[i]) * dt;
@@ -57,13 +61,13 @@ function stepSim() {
     const head = histHead[i];
     histX[i][head] = px[i];
     histY[i][head] = py[i];
-    histHead[i] = (head + 1) % TRAIL_LENGTH;
-    if (histLen[i] < TRAIL_LENGTH) histLen[i]++;
+    histHead[i] = (head + 1) % activeTrailLength;
+    if (histLen[i] < activeTrailLength) histLen[i]++;
   }
 }
 
 function clearHistory() {
-  for (let i = 0; i < MAX_PARTICLES; i++) {
+  for (let i = 0; i < DEFAULT_MAX_PARTICLES; i++) {
     histLen[i]  = 0;
     histHead[i] = 0;
   }
@@ -86,7 +90,7 @@ function buildGradient() {
 
 function startSim() {
   if (simIntervalId !== null) return;
-  simIntervalId = setInterval(stepSim, 32);
+  simIntervalId = setInterval(stepSim, simIntervalMs);
 }
 
 function stopSim() {
@@ -96,11 +100,19 @@ function stopSim() {
   }
 }
 
+function applyConfig(config = {}) {
+  activeParticles = Math.min(DEFAULT_MAX_PARTICLES, config.particleBudget || DEFAULT_MAX_PARTICLES);
+  activeTrailLength = Math.min(DEFAULT_TRAIL_LENGTH, config.trailLength || DEFAULT_TRAIL_LENGTH);
+  fpsCap = config.fpsCap || DEFAULT_FPS_CAP;
+  simIntervalMs = config.simInterval || 32;
+  clearHistory();
+}
+
 function draw(now) {
   rafId = requestAnimationFrame(draw);
   if (!ctx || !isVisible) return;
 
-  if (now - lastFrameTime < FPS_CAP) return;
+  if (now - lastFrameTime < fpsCap) return;
   lastFrameTime = now;
 
   const cssW = w / dpr;
@@ -116,17 +128,17 @@ function draw(now) {
   ctx.lineWidth   = 0.85;
   ctx.beginPath();
 
-  for (let i = 0; i < MAX_PARTICLES; i++) {
+  for (let i = 0; i < activeParticles; i++) {
     const len = histLen[i];
     if (len < 2) continue;
 
     const head     = histHead[i];
     const hx       = histX[i];
     const hy       = histY[i];
-    const startIdx = len < TRAIL_LENGTH ? 0 : head;
+    const startIdx = len < activeTrailLength ? 0 : head;
 
     for (let j = 0; j < len; j++) {
-      const idx    = (startIdx + j) % TRAIL_LENGTH;
+      const idx    = (startIdx + j) % activeTrailLength;
       screenX[j]   = centerX + hx[idx] * zoomScale;
       screenY[j]   = centerY + hy[idx] * zoomScale;
     }
@@ -148,7 +160,7 @@ self.onmessage = (e) => {
   const { type } = e.data;
 
   if (type === 'init') {
-    const { canvas, width, height, devicePixelRatio, cx, cy, mobile } = e.data;
+    const { canvas, width, height, devicePixelRatio, cx, cy, mobile, config = {} } = e.data;
     ctx      = canvas.getContext('2d');
     dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
@@ -157,6 +169,7 @@ self.onmessage = (e) => {
     centerY  = cy;
     isMobile = mobile;
     ctx.scale(dpr, dpr);
+    applyConfig(config);
     initParticles();
     buildGradient();
     rafId = requestAnimationFrame(draw);
