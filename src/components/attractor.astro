@@ -36,17 +36,17 @@
       const worker = new Worker('/portfolio/attractor-worker.js');
 
       function getCenter(cw: number, ch: number) {
-        const isMobile = cw < 768;
+        const isMobile = cw < 600;
+        const landingRect = landingSection.getBoundingClientRect();
         if (!isMobile && titleEl) {
-          const titleRect   = titleEl.getBoundingClientRect();
-          const landingRect = landingSection.getBoundingClientRect();
+          const titleRect = titleEl.getBoundingClientRect();
           return {
-            cx: (titleRect.right - landingRect.left) - 20,
-            cy: (titleRect.top  - landingRect.top) + titleRect.height / 2 + 20,
+            cxRatio: ((titleRect.right - landingRect.left) - 20) / landingRect.width,
+            cyRatio: ((titleRect.top - landingRect.top) + titleRect.height / 2 + 20) / landingRect.height,
             mobile: false,
           };
         }
-        return { cx: cw / 2, cy: ch / 2, mobile: true };
+        return { cxRatio: 0.5, cyRatio: 0.5, mobile: true };
       }
 
       function getDims() {
@@ -68,7 +68,9 @@
       canvas.style.height = `${dims.cssH}px`;
 
       const offscreen = canvas.transferControlToOffscreen();
-      const { cx, cy, mobile } = getCenter(dims.cssW, dims.cssH);
+      const center = getCenter(dims.cssW, dims.cssH);
+      const cx = center.cxRatio * dims.cssW;
+      const cy = center.cyRatio * dims.cssH;
 
       worker.postMessage({
         type:   'init',
@@ -76,7 +78,7 @@
         width:  dims.width,
         height: dims.height,
         devicePixelRatio: dims.dpr,
-        cx, cy, mobile,
+        cx, cy, mobile: center.mobile,
         config,
       }, [offscreen]);
 
@@ -94,9 +96,11 @@
           lastCssW = d.cssW;
           lastCssH = d.cssH;
           lastDpr = d.dpr;
-          const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
+          const center = getCenter(d.cssW, d.cssH);
+          const cx = center.cxRatio * d.cssW;
+          const cy = center.cyRatio * d.cssH;
           worker.postMessage({ type: 'resize', width: d.width, height: d.height,
-            devicePixelRatio: d.dpr, cx, cy, mobile });
+            devicePixelRatio: d.dpr, cx, cy, mobile: center.mobile });
         });
       };
 
@@ -113,8 +117,10 @@
         ticking = true;
         requestAnimationFrame(() => {
           const d = getDims();
-          const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
-          worker.postMessage({ type: 'center', cx, cy, mobile });
+          const center = getCenter(d.cssW, d.cssH);
+          const cx = center.cxRatio * d.cssW;
+          const cy = center.cyRatio * d.cssH;
+          worker.postMessage({ type: 'center', cx, cy, mobile: center.mobile });
           ticking = false;
         });
       }, { passive: true });
