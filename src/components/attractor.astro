@@ -83,21 +83,25 @@
       let lastCssW = dims.cssW;
       let lastCssH = dims.cssH;
       let lastDpr  = dims.dpr;
+      let resizeFrame: number | null = null;
 
       const handleResize = () => {
-        const d = getDims();
-        if (d.cssW === lastCssW && d.cssH === lastCssH && d.dpr === lastDpr) return;
-        lastCssW = d.cssW;
-        lastCssH = d.cssH;
-        lastDpr = d.dpr;
-        const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
-        worker.postMessage({ type: 'resize', width: d.width, height: d.height,
-          devicePixelRatio: d.dpr, cx, cy, mobile });
+        if (resizeFrame !== null) return;
+        resizeFrame = requestAnimationFrame(() => {
+          resizeFrame = null;
+          const d = getDims();
+          if (d.cssW === lastCssW && d.cssH === lastCssH && d.dpr === lastDpr) return;
+          lastCssW = d.cssW;
+          lastCssH = d.cssH;
+          lastDpr = d.dpr;
+          const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
+          worker.postMessage({ type: 'resize', width: d.width, height: d.height,
+            devicePixelRatio: d.dpr, cx, cy, mobile });
+        });
       };
 
       window.addEventListener('resize', handleResize);
       window.visualViewport?.addEventListener('resize', handleResize);
-      window.visualViewport?.addEventListener('scroll', handleResize);
 
       document.addEventListener('visibilitychange', () => {
         worker.postMessage({ type: 'visible', value: !document.hidden });
@@ -159,7 +163,6 @@
         canvas!.style.height = `${rect.height}px`;
         ctx!.setTransform(1, 0, 0, 1, 0, 0);
         ctx!.scale(dpr, dpr);
-        particles.forEach(p => p.history = []);
       }
       window.addEventListener('resize', resizeCanvas);
       window.visualViewport?.addEventListener('resize', resizeCanvas);

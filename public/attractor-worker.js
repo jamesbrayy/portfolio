@@ -180,8 +180,6 @@ self.onmessage = (e) => {
 
   if (type === 'resize') {
     const { width, height, devicePixelRatio, cx, cy, mobile } = e.data;
-    const newCssW = width / Math.min(devicePixelRatio, 1.5);
-    const oldCssW = w / dpr;
     dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
     h        = height;
@@ -192,7 +190,6 @@ self.onmessage = (e) => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
-    if (Math.abs(newCssW - oldCssW) > 1) clearHistory();
     buildGradient();
   }
 
