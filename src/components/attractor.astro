@@ -86,6 +86,13 @@
       let lastCssH = dims.cssH;
       let lastDpr  = dims.dpr;
       let lastVisualScale = window.visualViewport?.scale ?? 1;
+      let lastViewportW = window.visualViewport?.width ?? window.innerWidth;
+      let lastViewportH = window.visualViewport?.height ?? window.innerHeight;
+      let lastInnerW = window.innerWidth;
+      let lastInnerH = window.innerHeight;
+      let lastOuterW = window.outerWidth;
+      let lastOuterH = window.outerHeight;
+      let lastDevicePixelRatio = window.devicePixelRatio;
       let resizeFrame: number | null = null;
 
       const handleResize = () => {
@@ -93,11 +100,26 @@
         resizeFrame = requestAnimationFrame(() => {
           resizeFrame = null;
           const d = getDims();
-          if (d.cssW === lastCssW && d.cssH === lastCssH && d.dpr === lastDpr) return;
+          const scale = window.visualViewport?.scale ?? 1;
+          const viewportW = window.visualViewport?.width ?? window.innerWidth;
+          const viewportH = window.visualViewport?.height ?? window.innerHeight;
+          const innerW = window.innerWidth;
+          const innerH = window.innerHeight;
+          const outerW = window.outerWidth;
+          const outerH = window.outerHeight;
+          const devicePixelRatio = window.devicePixelRatio;
+          if (d.cssW === lastCssW && d.cssH === lastCssH && d.dpr === lastDpr && scale === lastVisualScale && viewportW === lastViewportW && viewportH === lastViewportH && innerW === lastInnerW && innerH === lastInnerH && outerW === lastOuterW && outerH === lastOuterH && devicePixelRatio === lastDevicePixelRatio) return;
           lastCssW = d.cssW;
           lastCssH = d.cssH;
           lastDpr = d.dpr;
-          lastVisualScale = window.visualViewport?.scale ?? lastVisualScale;
+          lastVisualScale = scale;
+          lastViewportW = viewportW;
+          lastViewportH = viewportH;
+          lastInnerW = innerW;
+          lastInnerH = innerH;
+          lastOuterW = outerW;
+          lastOuterH = outerH;
+          lastDevicePixelRatio = devicePixelRatio;
           const center = getCenter(d.cssW, d.cssH);
           worker.postMessage({ type: 'resize', width: d.width, height: d.height,
             devicePixelRatio: d.dpr,
@@ -109,9 +131,15 @@
 
       const zoomCheck = () => {
         const scale = window.visualViewport?.scale ?? 1;
+        const viewportW = window.visualViewport?.width ?? window.innerWidth;
+        const viewportH = window.visualViewport?.height ?? window.innerHeight;
+        const innerW = window.innerWidth;
+        const innerH = window.innerHeight;
+        const outerW = window.outerWidth;
+        const outerH = window.outerHeight;
+        const devicePixelRatio = window.devicePixelRatio;
         const d = getDims();
-        if (scale !== lastVisualScale || d.cssW !== lastCssW || d.cssH !== lastCssH || d.dpr !== lastDpr) {
-          lastVisualScale = scale;
+        if (scale !== lastVisualScale || viewportW !== lastViewportW || viewportH !== lastViewportH || innerW !== lastInnerW || innerH !== lastInnerH || outerW !== lastOuterW || outerH !== lastOuterH || devicePixelRatio !== lastDevicePixelRatio || d.cssW !== lastCssW || d.cssH !== lastCssH || d.dpr !== lastDpr) {
           handleResize();
         }
       };
