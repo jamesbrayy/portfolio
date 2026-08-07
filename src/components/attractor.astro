@@ -6,8 +6,10 @@
 
   const isLowPower = (() => {
     const cores = navigator.hardwareConcurrency || 4;
-    const mem = navigator.deviceMemory || 4;
-    return cores <= 4 || mem <= 4;
+    const mem = 'deviceMemory' in navigator
+      ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+      : 4;
+    return cores <= 4 || (typeof mem === 'number' ? mem : 4) <= 4;
   })();
 
   const isSmallScreen = window.innerWidth < 900;

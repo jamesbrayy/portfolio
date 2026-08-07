@@ -97,15 +97,15 @@ import { projectsData } from '../data/projects.js';
                 <value>6.5</value>
               </div>
             </div>
-            <div class="edu-subjects">
-              <p class="edu-subjects-label">units taken</p>
-              <div class="edu-subject-scroll-wrap">
+            <div class="contents">
+              <p class="contents-label">units taken</p>
+              <div class="content-scroll-wrap">
                 <button class="edu-scroll-btn left" aria-label="Scroll left">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
-                <div class="edu-subject-scroll">
+                <div class="content-scroll">
                   <span class="stack-tag">Multivariable Calculus (MATH1011)</span>
                   <span class="stack-tag">Mathematical Theory and Methods (MATH1012)</span>
                   <span class="stack-tag">Mathematical Analysis (MATH1013)</span>
@@ -146,15 +146,15 @@ import { projectsData } from '../data/projects.js';
                 <li><em>The Duke of Edinburgh's Award (Silver)</em> - Contributions to music, sport, and community</li>
               </ul>
             </div>
-            <div class="edu-subjects">
-              <p class="edu-subjects-label">subjects</p>
-              <div class="edu-subject-scroll-wrap">
+            <div class="contents">
+              <p class="contents-label">subjects</p>
+              <div class="content-scroll-wrap">
                 <button class="edu-scroll-btn left" aria-label="Scroll left">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
-                <div class="edu-subject-scroll">
+                <div class="content-scroll">
                   <span class="stack-tag">mathematics specialist</span>
                   <span class="stack-tag">mathematics methods</span>
                   <span class="stack-tag">physics</span>
@@ -186,17 +186,17 @@ import { projectsData } from '../data/projects.js';
         While I value the theoretical framework of my studies, I am most passionate about validating and exploring predicted phenomena <em>at the bench</em>.
         <br><br>
         Outside of my university coursework, this manifests as a wide range of <em>self-driven projects</em>. I have designed and fabricated <em>high-voltage circuits</em>, 
-        used <em>Python</em> to computationally model and visualise physical systems, and regularly build, fly, and repair high-performance <em>FPV quadcopters</em>. 
+        used <em>Python</em> to computationally model and visualise physical systems, and build, fly, and repair high-performance <em>FPV quadcopters</em>. 
       </p>
-      <div class="edu-subjects">
-        <p class="edu-subjects-label">subjects</p>
-        <div class="edu-subject-scroll-wrap">
+      <div class="contents">
+        <p class="contents-label">skills</p>
+        <div class="content-scroll-wrap">
           <button class="edu-scroll-btn left" aria-label="Scroll left">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M7.5 2L3.5 6L7.5 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
-          <div class="edu-subject-scroll">
+          <div class="content-scroll">
             <span class="stack-tag">python</span>
             <span class="stack-tag">mathematica</span>
             <span class="stack-tag">latex</span>
@@ -297,8 +297,8 @@ import { projectsData } from '../data/projects.js';
     setTimeout(type, 600);
   }
 
-  document.querySelectorAll<HTMLElement>('.edu-subject-scroll-wrap').forEach(wrap => {
-    const scroll  = wrap.querySelector<HTMLElement>('.edu-subject-scroll')!;
+  document.querySelectorAll<HTMLElement>('.content-scroll-wrap').forEach(wrap => {
+    const scroll  = wrap.querySelector<HTMLElement>('.content-scroll')!;
     const btnLeft = wrap.querySelector<HTMLElement>('.edu-scroll-btn.left')!;
     const btnRight= wrap.querySelector<HTMLElement>('.edu-scroll-btn.right')!;
 
@@ -477,7 +477,7 @@ import { projectsData } from '../data/projects.js';
   .edu-degree,
   .edu-institution,
   .edu-awards li,
-  .edu-subjects-label,
+  .contents-label,
   .edu-period,
   .edu-status,
   .edu-stat value {
@@ -515,15 +515,15 @@ import { projectsData } from '../data/projects.js';
   }
   .edu-stat value { font-size: 13px; color: var(--text); }
 
-  .edu-subjects { margin-top: 20px; }
-  .edu-subjects-label {
+  .contents { margin-top: 20px; }
+  .contents-label {
     font-size: 10px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--muted-text);
     margin-bottom: 10px;
   }
-  .edu-subject-scroll-wrap {
+  .content-scroll-wrap {
     display: flex;
     align-items: center;
     position: relative;
@@ -557,7 +557,7 @@ import { projectsData } from '../data/projects.js';
   }
   .edu-scroll-btn:hover { color: var(--accent); }
   
-  .edu-subject-scroll {
+  .content-scroll {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -572,9 +572,9 @@ import { projectsData } from '../data/projects.js';
     border-right: none;
     padding: 4px 0;
   }
-  .edu-subject-scroll::-webkit-scrollbar { display: none; }
-  .edu-subject-scroll.dragging { cursor: grabbing; }
-  .edu-subject-scroll .stack-tag { flex-shrink: 0; }
+  .content-scroll::-webkit-scrollbar { display: none; }
+  .content-scroll.dragging { cursor: grabbing; }
+  .content-scroll .stack-tag { flex-shrink: 0; }
   
   .edu-awards { margin-top: 20px; }
   .edu-awards-label {
@@ -612,16 +612,16 @@ import { projectsData } from '../data/projects.js';
     .edu-entry { grid-template-columns: 1fr; gap: 12px; }
     .edu-meta { flex-direction: row; gap: 16px; align-items: center; }
     .edu-body,
-    .edu-subjects,
+    .contents,
     .edu-stats,
     .edu-awards,
-    .edu-subject-scroll-wrap {
+    .content-scroll-wrap {
       min-width: 0;
       width: 100%;
     }
     .edu-stats { flex-wrap: wrap; gap: 16px; }
-    .edu-subject-scroll-wrap { padding: 0 8px; }
-    .edu-subject-scroll { padding: 4px 4px; }
+    .content-scroll-wrap { padding: 0 8px; }
+    .content-scroll { padding: 4px 4px; }
   }
 
   .about-text {
