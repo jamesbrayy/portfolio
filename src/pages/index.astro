@@ -242,10 +242,10 @@ import { projectsData } from '../data/projects.js';
       const response = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`);
       const { data } = await response.json();
       const statusMap = {
-        online: { color: 'var(--accent)', text: 'online' },
-        idle:   { color: 'var(--accent)', text: 'online' },
-        dnd:    { color: '#ff4a4a',       text: 'busy' },
-        offline:{ color: '#3a3a3a',       text: 'offline' }
+        online: { color: 'var(--accent)', text: 'Online' },
+        idle:   { color: 'var(--accent)', text: 'Online' },
+        dnd:    { color: '#ff4a4a',       text: 'Busy' },
+        offline:{ color: '#3a3a3a',       text: 'Offline' }
       } as const;
       const currentStatus = data.discord_status as keyof typeof statusMap;
       const config = statusMap[currentStatus] || statusMap.offline;

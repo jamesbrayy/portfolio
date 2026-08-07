@@ -168,7 +168,10 @@ self.onmessage = (e) => {
     centerX  = cx;
     centerY  = cy;
     isMobile = mobile;
-    ctx.scale(dpr, dpr);
+    if (ctx) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
     applyConfig(config);
     initParticles();
     buildGradient();
@@ -185,6 +188,10 @@ self.onmessage = (e) => {
     centerX  = cx;
     centerY  = cy;
     isMobile = mobile;
+    if (ctx) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+    }
     if (Math.abs(newCssW - oldCssW) > 1) clearHistory();
     buildGradient();
   }

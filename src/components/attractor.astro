@@ -6,10 +6,9 @@
 
   const isLowPower = (() => {
     const cores = navigator.hardwareConcurrency || 4;
-    const mem = 'deviceMemory' in navigator
-      ? (navigator as Navigator & { deviceMemory?: number }).deviceMemory
-      : 4;
-    return cores <= 4 || (typeof mem === 'number' ? mem : 4) <= 4;
+    const nav = navigator as unknown as { deviceMemory?: number };
+    const mem = typeof nav.deviceMemory === 'number' ? nav.deviceMemory : 4;
+    return cores <= 4 || mem <= 4;
   })();
 
   const isSmallScreen = window.innerWidth < 900;
@@ -81,18 +80,24 @@
         config,
       }, [offscreen]);
 
-      let lastCssW = 0;
+      let lastCssW = dims.cssW;
+      let lastCssH = dims.cssH;
+      let lastDpr  = dims.dpr;
 
-      window.addEventListener('resize', () => {
+      const handleResize = () => {
         const d = getDims();
-        if (d.cssW === lastCssW) return;
+        if (d.cssW === lastCssW && d.cssH === lastCssH && d.dpr === lastDpr) return;
         lastCssW = d.cssW;
+        lastCssH = d.cssH;
+        lastDpr = d.dpr;
         const { cx, cy, mobile } = getCenter(d.cssW, d.cssH);
         worker.postMessage({ type: 'resize', width: d.width, height: d.height,
           devicePixelRatio: d.dpr, cx, cy, mobile });
-      });
+      };
 
-      lastCssW = dims.cssW;
+      window.addEventListener('resize', handleResize);
+      window.visualViewport?.addEventListener('resize', handleResize);
+      window.visualViewport?.addEventListener('scroll', handleResize);
 
       document.addEventListener('visibilitychange', () => {
         worker.postMessage({ type: 'visible', value: !document.hidden });
@@ -152,10 +157,13 @@
         canvas!.height = rect.height * dpr;
         canvas!.style.width  = `${rect.width}px`;
         canvas!.style.height = `${rect.height}px`;
+        ctx!.setTransform(1, 0, 0, 1, 0, 0);
         ctx!.scale(dpr, dpr);
         particles.forEach(p => p.history = []);
       }
       window.addEventListener('resize', resizeCanvas);
+      window.visualViewport?.addEventListener('resize', resizeCanvas);
+      window.visualViewport?.addEventListener('scroll', resizeCanvas);
       resizeCanvas();
 
       function draw(now = performance.now()) {
