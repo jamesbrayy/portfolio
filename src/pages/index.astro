@@ -651,6 +651,14 @@ import { projectsData } from '../data/projects.js';
   }
   .reveal.visible { opacity: 1; transform: none; }
 
+  @media (max-width: 700px) {
+    .landing {
+      justify-content: flex-start;
+      padding-top: 100px;
+      padding-bottom: 60px;
+    }
+  }
+
   @media (max-width: 600px) {
     .projects-grid { grid-template-columns: 1fr; }
     .landing-meta { flex-wrap: wrap; gap: 24px; }
