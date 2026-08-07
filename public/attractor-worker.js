@@ -160,18 +160,20 @@ self.onmessage = (e) => {
   const { type } = e.data;
 
   if (type === 'init') {
-    const { canvas, width, height, devicePixelRatio, cx, cy, mobile, config = {} } = e.data;
+    const { canvas, width, height, devicePixelRatio, cxRatio, cyRatio, mobile, config = {} } = e.data;
     ctx      = canvas.getContext('2d');
     dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
     h        = height;
-    centerX  = cx;
-    centerY  = cy;
     isMobile = mobile;
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
+    const cssW = w / dpr;
+    const cssH = h / dpr;
+    centerX = cxRatio * cssW;
+    centerY = cyRatio * cssH;
     applyConfig(config);
     initParticles();
     buildGradient();
@@ -179,24 +181,29 @@ self.onmessage = (e) => {
   }
 
   if (type === 'resize') {
-    const { width, height, devicePixelRatio, cx, cy, mobile } = e.data;
+    const { width, height, devicePixelRatio, cxRatio, cyRatio, mobile } = e.data;
     dpr      = Math.min(devicePixelRatio, 1.5);
     w        = width;
     h        = height;
-    centerX  = cx;
-    centerY  = cy;
     isMobile = mobile;
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
+    const cssW = w / dpr;
+    const cssH = h / dpr;
+    centerX = cxRatio * cssW;
+    centerY = cyRatio * cssH;
     buildGradient();
   }
 
   if (type === 'center') {
-    centerX  = e.data.cx;
-    centerY  = e.data.cy;
-    isMobile = e.data.mobile;
+    const { cxRatio, cyRatio, mobile } = e.data;
+    const cssW = w / dpr;
+    const cssH = h / dpr;
+    centerX = cxRatio * cssW;
+    centerY = cyRatio * cssH;
+    isMobile = mobile;
     buildGradient();
   }
 

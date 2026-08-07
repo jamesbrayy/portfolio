@@ -213,17 +213,6 @@ import { projectsData } from '../data/projects.js';
     </div>
   </section>
 
-  <section id="contact">
-    <div class="container">
-      <div class="section-header">
-        <span class="section-label">contact</span>
-        <span class="section-title">Get in touch.</span>
-      </div>
-      <p class="contact-line" id="contact-line">
-        Got an idea, question, or just want to talk physics - <a href="mailto:jamesmbray@outlook.com">jamesmbray@outlook.com</a>
-      </p>
-    </div>
-  </section>
 </Layout>
 
 <script>
@@ -654,24 +643,6 @@ import { projectsData } from '../data/projects.js';
     padding: 6px 12px;
   }
 
-  .contact-line {
-    font-size: clamp(22px, 4vw, 36px);
-    font-weight: 300;
-    color: var(--muted-text);
-    line-height: 1.5;
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity 0.6s, transform 0.6s;
-  }
-  .contact-line.visible { opacity: 1; transform: none; }
-  .contact-line a {
-    color: var(--text);
-    text-decoration: none;
-    border-bottom: 1px solid var(--accent);
-    padding-bottom: 2px;
-    transition: color 0.2s;
-  }
-  .contact-line a:hover { color: var(--accent); }
 
   .reveal {
     opacity: 0;

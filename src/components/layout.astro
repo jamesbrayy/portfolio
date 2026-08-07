@@ -25,7 +25,6 @@ const {title} = Astro.props;
       <li><a href="/portfolio#projects">projects</a></li>
       <li><a href="/portfolio#education">education</a></li>
       <li><a href="/portfolio#about">about</a></li>
-      <li><a href="/portfolio#contact">contact</a></li>
     </ul>
   </div>
 </nav>
@@ -36,9 +35,10 @@ const {title} = Astro.props;
   <div class="container">
     <p>© 2026 James Bray</p>
     <ul class="footer-links">
-      <li><a href="https://github.com/jamesbrayy" target="_blank" rel="noopener noreferrer">github</a></li>
-      <li><a href="https://instagram.com/jamesbrayyyyy" target="_blank" rel="noopener noreferrer">instagram</a></li>
+      <li><a href="mailto:jamesmbray@outlook.com">email</a></li>
       <li><a href="https://linkedin.com/in/jamesbrayy" target="_blank" rel="noopener noreferrer">linkedin</a></li>
+      <li><a href="https://instagram.com/jamesbrayyyyy" target="_blank" rel="noopener noreferrer">instagram</a></li>
+      <li><a href="https://github.com/jamesbrayy" target="_blank" rel="noopener noreferrer">github</a></li>
     </ul>
   </div>
 </footer>
@@ -65,7 +65,7 @@ const {title} = Astro.props;
     revealObserver.observe(card);
   });
 
-  ['about-text', 'about-stack', 'contact-line'].forEach(id => {
+  ['about-text', 'about-stack'].forEach(id => {
     const el = document.getElementById(id);
     if (el) revealObserver.observe(el);
   });

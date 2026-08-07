@@ -69,8 +69,6 @@
 
       const offscreen = canvas.transferControlToOffscreen();
       const center = getCenter(dims.cssW, dims.cssH);
-      const cx = center.cxRatio * dims.cssW;
-      const cy = center.cyRatio * dims.cssH;
 
       worker.postMessage({
         type:   'init',
@@ -78,7 +76,9 @@
         width:  dims.width,
         height: dims.height,
         devicePixelRatio: dims.dpr,
-        cx, cy, mobile: center.mobile,
+        cxRatio: center.cxRatio,
+        cyRatio: center.cyRatio,
+        mobile: center.mobile,
         config,
       }, [offscreen]);
 
@@ -97,10 +97,11 @@
           lastCssH = d.cssH;
           lastDpr = d.dpr;
           const center = getCenter(d.cssW, d.cssH);
-          const cx = center.cxRatio * d.cssW;
-          const cy = center.cyRatio * d.cssH;
           worker.postMessage({ type: 'resize', width: d.width, height: d.height,
-            devicePixelRatio: d.dpr, cx, cy, mobile: center.mobile });
+            devicePixelRatio: d.dpr,
+            cxRatio: center.cxRatio,
+            cyRatio: center.cyRatio,
+            mobile: center.mobile });
         });
       };
 
@@ -118,9 +119,10 @@
         requestAnimationFrame(() => {
           const d = getDims();
           const center = getCenter(d.cssW, d.cssH);
-          const cx = center.cxRatio * d.cssW;
-          const cy = center.cyRatio * d.cssH;
-          worker.postMessage({ type: 'center', cx, cy, mobile: center.mobile });
+          worker.postMessage({ type: 'center',
+            cxRatio: center.cxRatio,
+            cyRatio: center.cyRatio,
+            mobile: center.mobile });
           ticking = false;
         });
       }, { passive: true });
