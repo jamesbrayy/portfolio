@@ -121,8 +121,8 @@ function draw(now) {
 
   if (!cachedGradient) buildGradient();
 
-  const zoomScale      = isMobile ? Math.max(24, cssW / 18) : 11.5;
-  const jumpThreshold  = isMobile ? cssW / 3 : cssW / 4;
+  const zoomScale      = isMobile ? Math.min(8, Math.max(5, cssW / 45)) : 11.5;
+  const jumpThreshold  = isMobile ? cssW / 4.5 : cssW / 4;
 
   ctx.strokeStyle = cachedGradient;
   ctx.lineWidth   = 0.85;
@@ -160,9 +160,9 @@ self.onmessage = (e) => {
   const { type } = e.data;
 
   if (type === 'init') {
-    const { canvas, width, height, devicePixelRatio, cxRatio, cyRatio, mobile, config = {} } = e.data;
+    const { canvas, width, height, devicePixelRatio, cx, cy, mobile, config = {} } = e.data;
     ctx      = canvas.getContext('2d');
-    dpr      = Math.min(devicePixelRatio, 1.5);
+    dpr      = devicePixelRatio;
     w        = width;
     h        = height;
     isMobile = mobile;
@@ -170,10 +170,8 @@ self.onmessage = (e) => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
-    const cssW = w / dpr;
-    const cssH = h / dpr;
-    centerX = cxRatio * cssW;
-    centerY = cyRatio * cssH;
+    centerX = cx;
+    centerY = cy;
     applyConfig(config);
     initParticles();
     buildGradient();
@@ -181,8 +179,8 @@ self.onmessage = (e) => {
   }
 
   if (type === 'resize') {
-    const { width, height, devicePixelRatio, cxRatio, cyRatio, mobile } = e.data;
-    dpr      = Math.min(devicePixelRatio, 1.5);
+    const { width, height, devicePixelRatio, cx, cy, mobile } = e.data;
+    dpr      = devicePixelRatio;
     w        = width;
     h        = height;
     isMobile = mobile;
@@ -190,19 +188,15 @@ self.onmessage = (e) => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
-    const cssW = w / dpr;
-    const cssH = h / dpr;
-    centerX = cxRatio * cssW;
-    centerY = cyRatio * cssH;
+    centerX = cx;
+    centerY = cy;
     buildGradient();
   }
 
   if (type === 'center') {
-    const { cxRatio, cyRatio, mobile } = e.data;
-    const cssW = w / dpr;
-    const cssH = h / dpr;
-    centerX = cxRatio * cssW;
-    centerY = cyRatio * cssH;
+    const { cx, cy, mobile } = e.data;
+    centerX = cx;
+    centerY = cy;
     isMobile = mobile;
     buildGradient();
   }

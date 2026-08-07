@@ -36,17 +36,17 @@
       const worker = new Worker('/portfolio/attractor-worker.js');
 
       function getCenter(cw: number, ch: number) {
-        const isMobile = cw < 600;
+        const isMobile = cw < 640;
         const landingRect = landingSection.getBoundingClientRect();
         if (!isMobile && titleEl) {
           const titleRect = titleEl.getBoundingClientRect();
           return {
-            cxRatio: ((titleRect.right - landingRect.left) - 20) / landingRect.width,
-            cyRatio: ((titleRect.top - landingRect.top) + titleRect.height / 2 + 20) / landingRect.height,
+            cx: (titleRect.right - landingRect.left) - 20,
+            cy: (titleRect.top - landingRect.top) + titleRect.height / 2 + 20,
             mobile: false,
           };
         }
-        return { cxRatio: 0.5, cyRatio: 0.5, mobile: true };
+        return { cx: cw / 2, cy: ch / 2, mobile: true };
       }
 
       function getDims() {
@@ -76,8 +76,8 @@
         width:  dims.width,
         height: dims.height,
         devicePixelRatio: dims.dpr,
-        cxRatio: center.cxRatio,
-        cyRatio: center.cyRatio,
+        cx: center.cx,
+        cy: center.cy,
         mobile: center.mobile,
         config,
       }, [offscreen]);
@@ -120,11 +120,15 @@
           lastOuterW = outerW;
           lastOuterH = outerH;
           lastDevicePixelRatio = devicePixelRatio;
+          canvas.width = d.width;
+          canvas.height = d.height;
+          canvas.style.width = `${d.cssW}px`;
+          canvas.style.height = `${d.cssH}px`;
           const center = getCenter(d.cssW, d.cssH);
           worker.postMessage({ type: 'resize', width: d.width, height: d.height,
             devicePixelRatio: d.dpr,
-            cxRatio: center.cxRatio,
-            cyRatio: center.cyRatio,
+            cx: center.cx,
+            cy: center.cy,
             mobile: center.mobile });
         });
       };
@@ -143,12 +147,19 @@
           handleResize();
         }
       };
-      const zoomPoll = window.setInterval(zoomCheck, 250);
+      const zoomPoll = window.setInterval(zoomCheck, 150);
 
       window.addEventListener('resize', handleResize);
+      window.addEventListener('orientationchange', handleResize);
       window.visualViewport?.addEventListener('resize', handleResize);
       window.visualViewport?.addEventListener('scroll', handleResize);
-      window.addEventListener('beforeunload', () => window.clearInterval(zoomPoll));
+      const resizeObserver = new ResizeObserver(handleResize);
+      resizeObserver.observe(landingSection);
+      resizeObserver.observe(document.documentElement);
+      window.addEventListener('beforeunload', () => {
+        window.clearInterval(zoomPoll);
+        resizeObserver.disconnect();
+      });
 
       document.addEventListener('visibilitychange', () => {
         worker.postMessage({ type: 'visible', value: !document.hidden });
@@ -222,6 +233,8 @@
           cx = (tr.right - lr.left) - 20;
           cy = (tr.top - lr.top) + tr.height/2 + 20;
         }
+        const zoomScale = mob ? Math.min(8, Math.max(5, cw / 45)) : 11.5;
+        const jumpThreshold = mob ? cw / 4.5 : cw / 4;
 
         if (accumulator >= simInterval) {
           particles.forEach(p => {
