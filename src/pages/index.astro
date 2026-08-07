@@ -332,6 +332,7 @@ import { projectsData } from '../data/projects.js';
   .landing {
     position: relative;
     min-height: 100vh;
+    width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -431,13 +432,20 @@ import { projectsData } from '../data/projects.js';
   .edu-list { display: flex; flex-direction: column; }
   .edu-entry {
     display: grid;
-    grid-template-columns: 200px 1fr;
+    grid-template-columns: minmax(0, 200px) 1fr;
     gap: 32px;
     padding: 40px 0;
     border-top: 1px solid var(--border);
+    min-width: 0;
   }
   .edu-entry:last-child { border-bottom: 1px solid var(--border); }
-  .edu-meta { display: flex; flex-direction: column; gap: 8px; padding-top: 2px; }
+  .edu-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 2px;
+    min-width: 0;
+  }
   .edu-period {
     font-size: 11px;
     letter-spacing: 0.08em;
@@ -452,6 +460,18 @@ import { projectsData } from '../data/projects.js';
     opacity: 0.7;
   }
   .edu-body { display: flex; flex-direction: column; gap: 6px; }
+  .edu-degree,
+  .edu-institution,
+  .edu-awards li,
+  .edu-subjects-label,
+  .edu-period,
+  .edu-status,
+  .edu-stat value {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: normal;
+  }
   .edu-degree {
     font-size: 14px;
     font-weight: 500;
@@ -525,6 +545,7 @@ import { projectsData } from '../data/projects.js';
   
   .edu-subject-scroll {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-wrap: nowrap;
     gap: 8px;
@@ -535,7 +556,7 @@ import { projectsData } from '../data/projects.js';
     user-select: none;
     border-left: none;
     border-right: none;
-    padding: 4px 0; 
+    padding: 4px 0;
   }
   .edu-subject-scroll::-webkit-scrollbar { display: none; }
   .edu-subject-scroll.dragging { cursor: grabbing; }
@@ -576,6 +597,17 @@ import { projectsData } from '../data/projects.js';
   @media (max-width: 700px) {
     .edu-entry { grid-template-columns: 1fr; gap: 12px; }
     .edu-meta { flex-direction: row; gap: 16px; align-items: center; }
+    .edu-body,
+    .edu-subjects,
+    .edu-stats,
+    .edu-awards,
+    .edu-subject-scroll-wrap {
+      min-width: 0;
+      width: 100%;
+    }
+    .edu-stats { flex-wrap: wrap; gap: 16px; }
+    .edu-subject-scroll-wrap { padding: 0 8px; }
+    .edu-subject-scroll { padding: 4px 4px; }
   }
 
   .about-text {
