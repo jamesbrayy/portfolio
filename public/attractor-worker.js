@@ -121,8 +121,8 @@ function draw(now) {
 
   if (!cachedGradient) buildGradient();
 
-  const zoomScale      = 11.5;
-  const jumpThreshold  = cssW / 4;
+  const zoomScale      = isMobile ? 14.5 : 11.5;
+  const jumpThreshold  = isMobile ? cssW / 3 : cssW / 4;
 
   ctx.strokeStyle = cachedGradient;
   ctx.lineWidth   = 0.85;

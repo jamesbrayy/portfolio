@@ -283,6 +283,19 @@ document.querySelectorAll<HTMLElement>('.edu-subject-scroll-wrap').forEach(wrap 
     }
   }
 
+  @media (max-width: 700px) {
+    footer .container {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+    }
+    .footer-links {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
   }

@@ -85,6 +85,7 @@
       let lastCssW = dims.cssW;
       let lastCssH = dims.cssH;
       let lastDpr  = dims.dpr;
+      let lastVisualScale = window.visualViewport?.scale ?? 1;
       let resizeFrame: number | null = null;
 
       const handleResize = () => {
@@ -96,6 +97,7 @@
           lastCssW = d.cssW;
           lastCssH = d.cssH;
           lastDpr = d.dpr;
+          lastVisualScale = window.visualViewport?.scale ?? lastVisualScale;
           const center = getCenter(d.cssW, d.cssH);
           worker.postMessage({ type: 'resize', width: d.width, height: d.height,
             devicePixelRatio: d.dpr,
@@ -105,27 +107,25 @@
         });
       };
 
+      const zoomCheck = () => {
+        const scale = window.visualViewport?.scale ?? 1;
+        const d = getDims();
+        if (scale !== lastVisualScale || d.cssW !== lastCssW || d.cssH !== lastCssH || d.dpr !== lastDpr) {
+          lastVisualScale = scale;
+          handleResize();
+        }
+      };
+      const zoomPoll = window.setInterval(zoomCheck, 250);
+
       window.addEventListener('resize', handleResize);
       window.visualViewport?.addEventListener('resize', handleResize);
+      window.visualViewport?.addEventListener('scroll', handleResize);
+      window.addEventListener('beforeunload', () => window.clearInterval(zoomPoll));
 
       document.addEventListener('visibilitychange', () => {
         worker.postMessage({ type: 'visible', value: !document.hidden });
       });
 
-      let ticking = false;
-      window.addEventListener('scroll', () => {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(() => {
-          const d = getDims();
-          const center = getCenter(d.cssW, d.cssH);
-          worker.postMessage({ type: 'center',
-            cxRatio: center.cxRatio,
-            cyRatio: center.cyRatio,
-            mobile: center.mobile });
-          ticking = false;
-        });
-      }, { passive: true });
 
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
